@@ -7,7 +7,7 @@ const generateTokens = (userId, email) => {
 	const accessToken = jwt.sign(
 		{ userId, email },
 		process.env.JWT_SECRET || "your-secret-key",
-		{ expiresIn: "15m" }
+		{ expiresIn: "1d" }
 	);
 	const refreshToken = jwt.sign(
 		{ userId, email },
@@ -90,6 +90,7 @@ export const loginUser = async (req, res) => {
 		return res.status(200).json({
 			message: "Login successful",
 			accessToken,
+			user: { userId: user.id, userName: user.name, userEmail: user.email },
 		});
 	} catch (error) {
 		return res.status(500).json({ message: "Something went wrong" });

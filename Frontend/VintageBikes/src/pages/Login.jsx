@@ -1,10 +1,13 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import axios from "axios"; // Assuming you're using Axios for API calls
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { BASE_API_URL } from "../api";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
+	const { setIsLoggedIn } = useAuth();
+
 	const {
 		register,
 		handleSubmit,
@@ -16,7 +19,15 @@ const Login = () => {
 	const onSubmit = async (data) => {
 		try {
 			const response = await axios.post(`${BASE_API_URL}/login`, data);
+			const { accessToken, user } = response.data;
+
+			localStorage.setItem("accessToken", accessToken);
+			localStorage.setItem("user", JSON.stringify(user));
+
 			console.log("Login Success:", response.data);
+			setIsLoggedIn(true);
+
+			navigate("/dashboard");
 		} catch (error) {
 			console.error("Login Error:", error.response?.data || error.message);
 		}

@@ -4,6 +4,7 @@ import {
 	loginUser,
 	verifyEmail,
 } from "../Controllers/userControllers.js";
+import { verifyToken } from "../Middlewares/auth.js";
 
 const router = express.Router();
 
