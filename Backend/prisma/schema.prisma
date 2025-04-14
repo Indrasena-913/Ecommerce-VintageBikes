@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  pending
+  shipped
+  delivered
+}
+
+// USER MODEL
+model User {
+  id         Int         @id @default(autoincrement())
+  name       String
+  email      String      @unique
+  password   String
+  phone      String
+  address    String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  // Relations
+  cartItems  CartItem[]
+  orders     Order[]
+  wishlist   Wishlist[]
+
+  @@map("users")
+}
+
+// PRODUCT MODEL
+model Product {
+  id           Int          @id @default(autoincrement())
+  name         String
+  description  String
+  modelYear    Int
+  price        Float
+  image        String[]
+  stock        Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Foreign key
+  categoryId   Int
+  category     Category     @relation(fields: [categoryId], references: [id])
+
+  // Relations
+  cartItems    CartItem[]
+  wishlistedBy Wishlist[]
+  orderItems   OrderItem[]
+
+  @@map("products")
+}
+
+// CATEGORY MODEL
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  products  Product[]
+
+  @@map("categories")
+}
+
+// CART ITEM MODEL
+model CartItem {
+  id        Int       @id @default(autoincrement())
+  quantity  Int
+  createdAt DateTime  @default(now())
+
+  // Foreign keys
+  userId    Int
+  productId Int
+
+  user      User      @relation(fields: [userId], references: [id])
+  product   Product   @relation(fields: [productId], references: [id])
+
+  @@map("cart_items")
+}
+
+// ORDER MODEL
+model Order {
+  id          Int          @id @default(autoincrement())
+  totalAmount Float
+  status      OrderStatus
+  createdAt   DateTime     @default(now())
+
+  // Foreign key
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id])
+
+  // Relations
+  orderItems  OrderItem[]
+
+  @@map("orders")
+}
+
+// ORDER ITEM MODEL — NEW!
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  price     Float
+
+  // Foreign keys
+  orderId   Int
+  productId Int
+
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+// WISHLIST MODEL
+model Wishlist {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+
+  // Foreign keys
+  userId    Int
+  productId Int
+
+  user      User      @relation(fields: [userId], references: [id])
+  product   Product   @relation(fields: [productId], references: [id])
+
+  @@map("wishlist")
+}
