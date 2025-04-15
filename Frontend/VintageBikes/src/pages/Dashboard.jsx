@@ -3,7 +3,7 @@ import axios from "axios";
 import { BASE_API_URL } from "../api.jsx";
 import { Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toggleWishlist } from "./AddtoList&Cart.jsx";
+import { toggleWishlist } from "./AddtoWishList.jsx";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../Redux/CartSlice.js";
 import toast from "react-hot-toast";
