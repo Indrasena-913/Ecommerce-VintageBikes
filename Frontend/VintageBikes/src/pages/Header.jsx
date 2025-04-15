@@ -25,7 +25,13 @@ const Header = () => {
 	const navigate = useNavigate();
 
 	const handleLogout = () => {
+		console.log("Logging Out");
+
+		localStorage.removeItem("accessToken");
+		localStorage.removeItem("user");
+
 		setIsLoggedIn(false);
+
 		navigate("/");
 	};
 
@@ -83,7 +89,10 @@ const Header = () => {
 							<div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg p-4 z-50">
 								<p className="font-semibold text-[#5E3A1D]">{User.userName}</p>
 								<p className="text-sm text-gray-500 mb-3">{User.userEmail}</p>
-								<button className="w-full bg-[#D2691E] text-white py-1.5 rounded-full hover:bg-[#a75d2a]">
+								<button
+									className="w-full bg-[#D2691E] text-white py-1.5 rounded-full hover:bg-[#a75d2a]"
+									onClick={handleLogout}
+								>
 									Logout
 								</button>
 							</div>

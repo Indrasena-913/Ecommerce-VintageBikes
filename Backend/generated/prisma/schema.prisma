@@ -91,21 +91,32 @@ model CartItem {
   @@map("cart_items")
 }
 
-// ORDER MODEL
 model Order {
   id          Int         @id @default(autoincrement())
   totalAmount Float
   status      OrderStatus
   createdAt   DateTime    @default(now())
 
-  // Foreign key
   userId Int
   user   User @relation(fields: [userId], references: [id])
 
-  // Relations
   orderItems OrderItem[]
 
-  @@map("orders")
+  payment Payment?
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  paymentIntentId String   @unique
+  amount          Int
+  currency        String
+  status          String
+  createdAt       DateTime @default(now())
+
+  orderId Int   @unique
+  order   Order @relation(fields: [orderId], references: [id])
+
+  userId Int?
 }
 
 // ORDER ITEM MODEL — NEW!

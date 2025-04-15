@@ -253,7 +253,7 @@ const Dashboard = () => {
 								<h3 className="text-xl font-semibold text-[#5E3A1D] mb-1">
 									{product.name}
 								</h3>
-								<div className="flex flex-wrap  mb-3 justify-center mt-2">
+								<div className="flex flex-wrap  mb-3 justify-center">
 									<span className="text-[#D2691E] font-semibold text-md px-2 py-1 rounded-full">
 										{product.category.name}
 									</span>
@@ -267,7 +267,7 @@ const Dashboard = () => {
 								<div className="flex justify-between items-center">
 									<div>
 										<p className="text-[#D2691E] font-bold text-lg">
-											₹{product.price.toLocaleString()}
+											${product.price.toLocaleString()}
 										</p>
 										<p className="text-yellow-600 text-sm">
 											{Array.from({ length: 5 }, (_, index) =>

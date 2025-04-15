@@ -135,24 +135,24 @@ const CartManager = () => {
 					{cartItems.map((item) => (
 						<div
 							key={item.product.id}
-							className="flex items-center gap-4 border-b pb-3 last:border-0 vintage-cart-item"
+							className="flex flex-col sm:flex-row items-center gap-4 border-b pb-3 last:border-0 vintage-cart-item"
 						>
 							<img
 								src={item.product.image[0]}
 								alt={item.product.name}
-								className="w-16 h-16 object-contain rounded-md vintage-cart-image cursor-pointer"
+								className="w-16 h-16 object-contain rounded-md vintage-cart-image cursor-pointer sm:w-24 sm:h-24"
 								onClick={() => navigate(`/products/${item.product.id}`)}
 							/>
-							<div className="flex-1 flex items-center justify-between">
+							<div className="flex-1 flex flex-col sm:flex-row items-center justify-between sm:items-start sm:flex-1">
 								<div className="flex-1">
 									<h3 className="text-lg font-serif text-gray-900 vintage-cart-item-name">
 										{item.product.name}
 									</h3>
 									<p className="text-brown-700 font-bold">
-										₹{item.product.price}
+										${item.product.price}
 									</p>
 								</div>
-								<div className="flex items-center gap-2 mt-2">
+								<div className="flex items-center gap-2 mt-2 sm:mt-0">
 									<button
 										className="bg-black font-medium text-white px-3 py-1 rounded-l vintage-cart-button"
 										onClick={() =>
@@ -189,9 +189,9 @@ const CartManager = () => {
 				<div className="mt-6 border-t pt-4">
 					<h3 className="text-lg font-serif text-gray-900">
 						Total:{" "}
-						<span className="text-brown-700">₹{totalPrice.toFixed(2)}</span>
+						<span className="text-brown-700">${totalPrice.toFixed(2)}</span>
 					</h3>
-					<div className="flex gap-2 mt-3">
+					<div className="flex flex-col sm:flex-row gap-2 mt-3">
 						<button
 							className="bg-red-500 text-white font-serif py-3 px-4 rounded-md hover:bg-red-600 vintage-clear-button"
 							onClick={handleClearCart}

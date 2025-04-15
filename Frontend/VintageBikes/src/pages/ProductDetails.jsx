@@ -153,7 +153,7 @@ const ProductDetails = () => {
 
 					<div>
 						<p className="text-[#D2691E] text-2xl font-bold">
-							₹{product.price.toLocaleString()}
+							${product.price.toLocaleString()}
 						</p>
 						<p className="text-yellow-600 text-lg">
 							{Array.from({ length: 5 }, (_, i) =>
@@ -211,7 +211,7 @@ const ProductDetails = () => {
 									{rp.name}
 								</h3>
 								<p className="text-[#D2691E] font-medium">
-									₹{rp.price.toLocaleString()}
+									${rp.price.toLocaleString()}
 								</p>
 							</div>
 						))}

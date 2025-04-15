@@ -165,6 +165,17 @@ exports.Prisma.OrderScalarFieldEnum = {
   userId: 'userId'
 };
 
+exports.Prisma.PaymentScalarFieldEnum = {
+  id: 'id',
+  paymentIntentId: 'paymentIntentId',
+  amount: 'amount',
+  currency: 'currency',
+  status: 'status',
+  createdAt: 'createdAt',
+  orderId: 'orderId',
+  userId: 'userId'
+};
+
 exports.Prisma.OrderItemScalarFieldEnum = {
   id: 'id',
   quantity: 'quantity',
@@ -189,6 +200,11 @@ exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 };
+
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
 exports.OrderStatus = exports.$Enums.OrderStatus = {
   pending: 'pending',
   shipped: 'shipped',
@@ -201,6 +217,7 @@ exports.Prisma.ModelName = {
   Category: 'Category',
   CartItem: 'CartItem',
   Order: 'Order',
+  Payment: 'Payment',
   OrderItem: 'OrderItem',
   Wishlist: 'Wishlist'
 };
