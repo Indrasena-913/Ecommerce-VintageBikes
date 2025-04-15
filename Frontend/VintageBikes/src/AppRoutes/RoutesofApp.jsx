@@ -5,6 +5,7 @@ import Register from "../pages/Register";
 import Dashboard from "../pages/Dashboard";
 import ProductDetails from "../pages/ProductDetails";
 import Wishlist from "../pages/Wishlist";
+import CartManager from "../pages/CartManager";
 
 const RoutesComponent = () => {
 	return (
@@ -15,6 +16,7 @@ const RoutesComponent = () => {
 			<Route path="/dashboard" element={<Dashboard />} />
 			<Route path="/products/:id" element={<ProductDetails />} />
 			<Route path="/wishlist" element={<Wishlist />} />
+			<Route path="/cart" element={<CartManager />} />
 		</Routes>
 	);
 };

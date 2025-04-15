@@ -4,6 +4,9 @@ import { BASE_API_URL } from "../api.jsx";
 import { Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toggleWishlist } from "./AddtoList&Cart.jsx";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../Redux/CartSlice.js";
+import toast from "react-hot-toast";
 
 const Dashboard = () => {
 	const [products, setProducts] = useState([]);
@@ -25,6 +28,7 @@ const Dashboard = () => {
 	const endIndex = startIndex + productsPerPage;
 	const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
 	const navigate = useNavigate();
+	const dispatch = useDispatch();
 
 	useEffect(() => {
 		const fetchProductsAndCategories = async () => {
@@ -135,6 +139,32 @@ const Dashboard = () => {
 		}
 	};
 
+	const handleAddToCart = async (product) => {
+		const token = localStorage.getItem("accessToken");
+		const user = JSON.parse(localStorage.getItem("user"));
+
+		dispatch(addToCart({ product, quantity: 1 }));
+
+		try {
+			await axios.post(
+				`${BASE_API_URL}/cart`,
+				{
+					productId: product.id,
+					quantity: 1,
+				},
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
+			toast.success("Product added to Cart");
+			console.log("Product added to cart successfully!");
+		} catch (error) {
+			console.error("Error adding product to cart:", error);
+		}
+	};
+
 	return (
 		<div className="flex flex-col min-h-screen mt-24 z-50">
 			<div className="flex-1 p-4 sm:p-6">
@@ -237,7 +267,7 @@ const Dashboard = () => {
 								<div className="flex justify-between items-center">
 									<div>
 										<p className="text-[#D2691E] font-bold text-lg">
-											${product.price.toLocaleString()}
+											₹{product.price.toLocaleString()}
 										</p>
 										<p className="text-yellow-600 text-sm">
 											{Array.from({ length: 5 }, (_, index) =>
@@ -261,7 +291,10 @@ const Dashboard = () => {
 									</button>
 								</div>
 
-								<button className="mt-3 bg-[#D2691E] text-white px-4 py-2 rounded-full hover:bg-[#a75d2a] w-full">
+								<button
+									className="mt-3 bg-[#D2691E] text-white px-4 py-2 rounded-full hover:bg-[#a75d2a] w-full"
+									onClick={() => handleAddToCart(product)}
+								>
 									Add to Cart
 								</button>
 							</div>

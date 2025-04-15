@@ -3,15 +3,21 @@ import axios from "axios";
 import { BASE_API_URL } from "../api";
 import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../Redux/CartSlice.js";
+import toast from "react-hot-toast";
+
 const Wishlist = () => {
 	const [wishlist, setWishlist] = useState([]);
 	const [loading, setLoading] = useState(true);
 
 	const [count, setCount] = useState(0);
 	const navigate = useNavigate();
+	const dispatch = useDispatch();
 
 	const response = localStorage.getItem("user");
 	const user = JSON.parse(response);
+
 	useEffect(() => {
 		const fetchWishlist = async () => {
 			try {
@@ -75,6 +81,33 @@ const Wishlist = () => {
 		}
 	};
 
+	const handleAddToCart = async (product) => {
+		const token = localStorage.getItem("accessToken");
+		const user = JSON.parse(localStorage.getItem("user"));
+
+		dispatch(addToCart({ product, quantity: 1 }));
+
+		try {
+			await axios.post(
+				`${BASE_API_URL}/cart`,
+				{
+					productId: product.id,
+					quantity: 1,
+				},
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
+			toast.success("Product added to Cart");
+
+			console.log("Product added to cart successfully!");
+		} catch (error) {
+			console.error("Error adding product to cart:", error);
+		}
+	};
+
 	if (loading) {
 		return <div>Loading...</div>;
 	}
@@ -89,6 +122,7 @@ const Wishlist = () => {
 						key={item.productId}
 						className="wishlist-card relative border border-gray-300 p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-300"
 					>
+						{/* Remove from wishlist button */}
 						<button
 							onClick={() => removeFromWishlist(item.productId)}
 							className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-700 transition-all duration-200"
@@ -105,8 +139,15 @@ const Wishlist = () => {
 						<h3 className="text-lg font-semibold">{item.product.name}</h3>
 						<p className="text-gray-500">{item.product.modelYear}</p>
 						<p className="text-xl font-bold text-red-500">
-							${item.product.price}
+							₹{item.product.price}
 						</p>
+
+						<button
+							onClick={() => handleAddToCart(item.product)}
+							className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-all duration-200"
+						>
+							Add to Cart
+						</button>
 					</div>
 				))
 			)}

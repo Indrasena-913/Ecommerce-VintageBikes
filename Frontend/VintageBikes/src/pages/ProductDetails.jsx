@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Heart } from "lucide-react";
 import axios from "axios";
-import { toast } from "react-toastify";
 import { BASE_API_URL } from "../api";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../Redux/CartSlice";
+import toast from "react-hot-toast";
 
 const ProductDetails = () => {
 	const { id } = useParams();
@@ -13,6 +15,7 @@ const ProductDetails = () => {
 	const [relatedProducts, setRelatedProducts] = useState([]);
 	const token = localStorage.getItem("accessToken");
 	const navigate = useNavigate();
+	const dispatch = useDispatch();
 
 	useEffect(() => {
 		const fetchProduct = async () => {
@@ -62,8 +65,29 @@ const ProductDetails = () => {
 		});
 	};
 
-	const handleAddToCart = () => {
-		toast.success("Added to cart!", { autoClose: 1000 });
+	const handleAddToCart = async (product) => {
+		const token = localStorage.getItem("accessToken");
+		const user = JSON.parse(localStorage.getItem("user"));
+
+		dispatch(addToCart({ product, quantity: 1 }));
+
+		try {
+			await axios.post(
+				`${BASE_API_URL}/cart`,
+				{
+					productId: product.id,
+					quantity: 1,
+				},
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
+			toast.success("Product added to Cart");
+		} catch (error) {
+			console.error("Error adding product to cart:", error);
+		}
 	};
 
 	if (!product) return <div className="text-center p-10">Loading...</div>;
@@ -129,7 +153,7 @@ const ProductDetails = () => {
 
 					<div>
 						<p className="text-[#D2691E] text-2xl font-bold">
-							${product.price.toLocaleString()}
+							₹{product.price.toLocaleString()}
 						</p>
 						<p className="text-yellow-600 text-lg">
 							{Array.from({ length: 5 }, (_, i) =>
@@ -139,7 +163,7 @@ const ProductDetails = () => {
 					</div>
 
 					<button
-						onClick={handleAddToCart}
+						onClick={() => handleAddToCart(product)}
 						className="mt-2 bg-[#D2691E] text-white px-6 py-3 rounded-full hover:bg-[#a75d2a] transition"
 					>
 						Add to Cart
@@ -187,7 +211,7 @@ const ProductDetails = () => {
 									{rp.name}
 								</h3>
 								<p className="text-[#D2691E] font-medium">
-									${rp.price.toLocaleString()}
+									₹{rp.price.toLocaleString()}
 								</p>
 							</div>
 						))}
