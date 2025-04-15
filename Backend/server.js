@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import userRoutes from "./Routes/userRoutes.js";
 import productRoutes from "./Routes/productRoutes.js";
 import categoryRoutes from "./Routes/categoryRoutes.js";
+import wishlistRoutes from "./Routes/wishlistRoutes.js";
 
 const PORT = 3000;
 const app = express();
@@ -14,6 +15,7 @@ app.use(cookieParser());
 app.use("/", userRoutes);
 app.use("/", productRoutes);
 app.use("/", categoryRoutes);
+app.use("/", wishlistRoutes);
 app.listen(PORT, (err) => {
 	if (err) {
 		console.log(err);

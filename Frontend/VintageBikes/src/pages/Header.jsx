@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { FaHeart, FaShoppingCart, FaBox, FaUserCircle } from "react-icons/fa";
+import {
+	FaHeart,
+	FaShoppingCart,
+	FaBox,
+	FaUserCircle,
+	FaHome,
+} from "react-icons/fa";
 import logo from "../assets/vbike.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -35,6 +41,14 @@ const Header = () => {
 			<nav className="flex-1">
 				<ul className="hidden md:flex justify-end items-center md:mr-16 lg:mr-40 xl:mr-60">
 					<li className="mx-4">
+						<a
+							href="/dashboard"
+							className="text-[#5E3A1D] hover:text-[#D2691E] text-lg flex items-center gap-1"
+						>
+							<FaHome /> Home
+						</a>
+					</li>
+					<li className="mx-4" onClick={() => navigate("/wishlist")}>
 						<a
 							href="/wishlist"
 							className="text-[#5E3A1D] hover:text-[#D2691E] text-lg flex items-center gap-1"

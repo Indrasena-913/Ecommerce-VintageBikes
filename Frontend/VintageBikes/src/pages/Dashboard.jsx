@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { BASE_API_URL } from "../api.jsx";
 import { Heart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toggleWishlist } from "./AddtoList&Cart.jsx";
 
 const Dashboard = () => {
 	const [products, setProducts] = useState([]);
@@ -22,6 +24,7 @@ const Dashboard = () => {
 	const startIndex = (currentPage - 1) * productsPerPage;
 	const endIndex = startIndex + productsPerPage;
 	const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		const fetchProductsAndCategories = async () => {
@@ -35,6 +38,8 @@ const Dashboard = () => {
 				});
 
 				setProducts(productResponse.data);
+				console.log(productResponse.data);
+
 				setFilteredProducts(productResponse.data);
 
 				const categoryResponse = await axios.get(`${BASE_API_URL}/categories`, {
@@ -53,6 +58,30 @@ const Dashboard = () => {
 		fetchProductsAndCategories();
 		setCurrentPage(1);
 	}, []);
+
+	useEffect(() => {
+		const fetchWishlist = async () => {
+			const token = localStorage.getItem("accessToken");
+			if (!token) return;
+			const response = localStorage.getItem("user");
+			const user = JSON.parse(response);
+
+			const res = await axios.get(`${BASE_API_URL}/wishlist/${user.userId}`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			console.log(res);
+
+			const likedIds = res.data?.map((item) => item.productId);
+			console.log("Likedids", likedIds);
+
+			setLikedProducts(likedIds || []);
+		};
+
+		fetchWishlist();
+	}, []);
+
 	useEffect(() => {
 		let updatedProducts = [...products];
 
@@ -92,18 +121,22 @@ const Dashboard = () => {
 		setCurrentPage(1);
 	}, [searchQuery, selectedCategory, priceRange, yearRange, sortBy, products]);
 
-	const handleWishlistToggle = (id) => {
-		setFilteredProducts((prevProducts) =>
-			prevProducts.map((product) =>
-				product.id === id
-					? { ...product, isWishlisted: !product.isWishlisted }
-					: product
-			)
-		);
+	const handleWishlistClick = async (productId) => {
+		setIsWishlistLoading(true);
+		const result = await toggleWishlist(productId);
+		setIsWishlistLoading(false);
+
+		if (result?.success) {
+			if (result?.action === "removed") {
+				setLikedProducts((prev) => prev.filter((id) => id !== productId));
+			} else if (result?.action === "added") {
+				setLikedProducts((prev) => [...prev, productId]);
+			}
+		}
 	};
 
 	return (
-		<div className="flex flex-col min-h-screen">
+		<div className="flex flex-col min-h-screen mt-24 z-50">
 			<div className="flex-1 p-4 sm:p-6">
 				<div className="mb-6 flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0 -mt-10">
 					<div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
@@ -184,16 +217,17 @@ const Dashboard = () => {
 								src={product.image[0]}
 								alt={product.name}
 								className="h-48 w-full object-cover"
+								onClick={() => navigate(`/products/${product.id}`)}
 							/>
 							<div className="p-4 flex flex-col justify-between flex-grow">
 								<h3 className="text-xl font-semibold text-[#5E3A1D] mb-1">
 									{product.name}
 								</h3>
-								<div className="flex flex-wrap gap-2 mb-3 justify-center mt-2">
-									<span className="border-[#D2691E] border-2 text-gray-500 text-xs px-2 py-1 rounded-full">
+								<div className="flex flex-wrap  mb-3 justify-center mt-2">
+									<span className="text-[#D2691E] font-semibold text-md px-2 py-1 rounded-full">
 										{product.category.name}
 									</span>
-									<span className="border-[#D2691E] border-2 text-gray-500 text-xs px-2 py-1 rounded-full">
+									<span className="text-[#D2691E] font-bold  text-md px-2 py-1 rounded-full">
 										{product.modelYear}
 									</span>
 								</div>
@@ -214,7 +248,7 @@ const Dashboard = () => {
 
 									<button
 										className=" bg-white p-1.5 rounded-full shadow-md transition-all duration-200 hover:scale-110"
-										onClick={(e) => toggleWishlist(product.id, e)}
+										onClick={() => handleWishlistClick(product.id)}
 										disabled={isWishlistLoading}
 									>
 										<Heart
