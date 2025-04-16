@@ -7,6 +7,7 @@ import categoryRoutes from "./Routes/categoryRoutes.js";
 import wishlistRoutes from "./Routes/wishlistRoutes.js";
 import CartRoutes from "./Routes/CartRoutes.js";
 import paymentRoutes from "./Routes/paymentRoutes.js";
+import OrderRoutes from "./Routes/OrderRoutes.js";
 
 const PORT = 3000;
 const app = express();
@@ -20,6 +21,7 @@ app.use("/", categoryRoutes);
 app.use("/", wishlistRoutes);
 app.use("/", CartRoutes);
 app.use("/", paymentRoutes);
+app.use("/", OrderRoutes);
 
 app.listen(PORT, (err) => {
 	if (err) {

@@ -19,7 +19,10 @@ const RoutesComponent = ({ count, setCount }) => {
 				path="/dashboard"
 				element={<Dashboard count={count} setCount={setCount} />}
 			/>
-			<Route path="/products/:id" element={<ProductDetails />} />
+			<Route
+				path="/products/:id"
+				element={<ProductDetails count={count} setCount={setCount} />}
+			/>
 			<Route
 				path="/wishlist"
 				element={<Wishlist count={count} setCount={setCount} />}

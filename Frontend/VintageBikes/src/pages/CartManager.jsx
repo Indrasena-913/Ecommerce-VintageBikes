@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-	addToCart,
-	removeFromCart,
-	setCart,
-	clearCart,
-} from "../Redux/CartSlice";
+import { addToCart, setCart, clearCart } from "../Redux/CartSlice";
 import { BASE_API_URL } from "../api";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
@@ -55,20 +50,6 @@ const CartManager = () => {
 			fetchCart();
 		}
 	}, [user?.userId, token, dispatch]);
-
-	const handleAdd = async (product) => {
-		try {
-			const res = await axios.post(
-				`${BASE_API_URL}/cart`,
-				{ productId: product.id, quantity: 1 },
-				{ headers: { Authorization: `Bearer ${token}` } }
-			);
-
-			dispatch(addToCart(res.data));
-		} catch (err) {
-			console.error("Error adding to cart:", err);
-		}
-	};
 
 	const handleRemove = async (productId) => {
 		try {

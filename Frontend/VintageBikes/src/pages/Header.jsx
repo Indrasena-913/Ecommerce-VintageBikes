@@ -22,6 +22,9 @@ const Header = ({ count }) => {
 
 	const cartItems = useSelector((state) => state.cart.items);
 	const cartCount = cartItems.length;
+	const myOrders = useSelector((state) => state.myOrders.orders);
+	const OrderCount = myOrders.length;
+	console.log(OrderCount);
 
 	const res = localStorage.getItem("user");
 	const user = JSON.parse(res);
@@ -108,10 +111,15 @@ const Header = ({ count }) => {
 
 						<li className="mx-4">
 							<a
-								href="/orders"
-								className="text-[#111827] hover:text-[#6366F1] text-lg flex items-center gap-1"
+								href="/my-orders"
+								className="relative text-[#111827] hover:text-[#6366F1] text-lg flex items-center gap-1"
 							>
 								<FaBox /> My Orders
+								{OrderCount > 0 && (
+									<span className="absolute -top-2 right-0 bg-[#111827] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+										{OrderCount}
+									</span>
+								)}
 							</a>
 						</li>
 
@@ -188,7 +196,7 @@ const Header = ({ count }) => {
 							<p className="font-semibold text-[#111827]">{user.userName}</p>
 							<p className="text-sm text-[#6B7280] mb-3">{user.userEmail}</p>
 							<a
-								href="/orders"
+								href="/my-orders"
 								className="mb-4 text-[#6366F1] hover:text-[#4F46E5] flex items-center gap-2"
 							>
 								<FaBox /> My Orders

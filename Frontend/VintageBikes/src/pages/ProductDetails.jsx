@@ -6,13 +6,15 @@ import { BASE_API_URL } from "../api";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../Redux/CartSlice";
 import toast from "react-hot-toast";
+import { toggleWishlist } from "./AddtoWishList.jsx";
 
-const ProductDetails = () => {
+const ProductDetails = ({ count, setCount }) => {
 	const { id } = useParams();
 	const [product, setProduct] = useState(null);
 	const [mainImage, setMainImage] = useState("");
 	const [liked, setLiked] = useState(false);
 	const [relatedProducts, setRelatedProducts] = useState([]);
+	const [isWishlistLoading, setIsWishlistLoading] = useState(false);
 	const token = localStorage.getItem("accessToken");
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
@@ -31,6 +33,30 @@ const ProductDetails = () => {
 			}
 		};
 		fetchProduct();
+	}, [id]);
+
+	useEffect(() => {
+		const checkWishlistStatus = async () => {
+			const token = localStorage.getItem("accessToken");
+			if (!token) return;
+			const response = localStorage.getItem("user");
+			const user = JSON.parse(response);
+
+			try {
+				const res = await axios.get(`${BASE_API_URL}/wishlist/${user.userId}`, {
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				});
+
+				const likedIds = res.data?.map((item) => item.productId);
+				setLiked(likedIds?.includes(Number(id)) || false);
+			} catch (error) {
+				console.error("Error fetching wishlist:", error);
+			}
+		};
+
+		checkWishlistStatus();
 	}, [id]);
 
 	useEffect(() => {
@@ -58,11 +84,19 @@ const ProductDetails = () => {
 		fetchRelatedProducts();
 	}, [id]);
 
-	const handleWishlistToggle = () => {
-		setLiked(!liked);
-		toast.info(liked ? "Removed from Wishlist" : "Added to Wishlist", {
-			autoClose: 1000,
-		});
+	const handleWishlistToggle = async () => {
+		setIsWishlistLoading(true);
+		const result = await toggleWishlist(Number(id));
+		setIsWishlistLoading(false);
+
+		if (result?.success) {
+			setLiked(!liked);
+		}
+		if (result?.action === "removed") {
+			setCount(count - 1);
+		} else if (result?.action === "added") {
+			setCount(count + 1);
+		}
 	};
 
 	const handleAddToCart = async (product) => {
@@ -129,7 +163,7 @@ const ProductDetails = () => {
 								<span className="font-medium">{product.modelYear}</span>
 							</p>
 						</div>
-						<button onClick={handleWishlistToggle}>
+						<button onClick={handleWishlistToggle} disabled={isWishlistLoading}>
 							<Heart
 								className={`w-6 h-6 transition ${
 									liked ? "fill-[#6366F1] text-[#6366F1]" : "text-gray-400"

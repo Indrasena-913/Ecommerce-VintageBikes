@@ -3,6 +3,7 @@ import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { clearCart } from "../Redux/CartSlice";
+import { addOrder } from "../Redux/MyOrderSlice";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { BASE_API_URL } from "../api";
@@ -52,6 +53,16 @@ const CheckoutForm = () => {
 					{ headers: { Authorization: `Bearer ${token}` } }
 				);
 
+				const newOrder = {
+					userId,
+					cartItems,
+					paymentIntentId: result.paymentIntent.id,
+					paymentStatus: result.paymentIntent.status,
+					createdAt: new Date().toISOString(),
+				};
+
+				dispatch(addOrder(newOrder));
+
 				setShowAnimation(true);
 
 				setTimeout(() => {
@@ -75,15 +86,15 @@ const CheckoutForm = () => {
 	};
 
 	const keyframes = `
-		@keyframes bikeMove {
-			0% {
-				left: -200px;
-			}
-			100% {
-				left: 100%;
-			}
-		}
-	`;
+    @keyframes bikeMove {
+      0% {
+        left: -200px;
+      }
+      100% {
+        left: 100%;
+      }
+    }
+  `;
 
 	if (showAnimation) {
 		return (
