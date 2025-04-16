@@ -9,7 +9,7 @@ import {
 import { BASE_API_URL } from "../api";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
-import { Trash2 } from "lucide-react";
+import { Trash2, ShoppingBag, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const CartManager = () => {
@@ -121,91 +121,135 @@ const CartManager = () => {
 		: 0;
 
 	return (
-		<div className="max-w-4xl mx-auto bg-[#F5EBDD] shadow-lg rounded-lg p-6 vintage-cart-container mt-24">
-			<h2 className="text-2xl font-serif text-brown-800 border-b pb-2 mb-4">
-				🛒 Your Cart ({Array.isArray(cartItems) ? cartItems.length : 0} items)
-			</h2>
+		<div className="max-w-5xl mx-auto bg-[#F9FAFB] shadow-md rounded-xl overflow-hidden mt-24">
+			<div className="bg-[#111827] text-[#F9FAFB] py-4 px-6">
+				<h2 className="text-2xl  tracking-tight flex items-center">
+					<ShoppingBag className="mr-3 text-[#6366F1]" />
+					Shopping Cart ({Array.isArray(cartItems) ? cartItems.length : 0})
+				</h2>
+			</div>
 
 			{loading ? (
-				<p className="text-gray-500 text-center">Loading...</p>
+				<div className="p-12 text-center">
+					<p className="text-[#111827] ">Loading your cart...</p>
+				</div>
 			) : !Array.isArray(cartItems) || cartItems.length === 0 ? (
-				<p className="text-gray-500 text-center">Your cart is empty.</p>
+				<div className="p-12 text-center">
+					<p className="text-[#111827]  text-lg">
+						Your cart is currently empty.
+					</p>
+					<button
+						onClick={() => navigate("/dashboard")}
+						className="mt-4 bg-[#6366F1] text-[#F9FAFB] px-6 py-2 rounded-lg "
+					>
+						Continue Shopping
+					</button>
+				</div>
 			) : (
-				<div className="space-y-4">
-					{cartItems.map((item) => (
-						<div
-							key={item.product.id}
-							className="flex flex-col sm:flex-row items-center gap-4 border-b pb-3 last:border-0 vintage-cart-item"
-						>
-							<img
-								src={item.product.image[0]}
-								alt={item.product.name}
-								className="w-16 h-16 object-contain rounded-md vintage-cart-image cursor-pointer sm:w-24 sm:h-24"
-								onClick={() => navigate(`/products/${item.product.id}`)}
-							/>
-							<div className="flex-1 flex flex-col sm:flex-row items-center justify-between sm:items-start sm:flex-1">
-								<div className="flex-1">
-									<h3 className="text-lg font-serif text-gray-900 vintage-cart-item-name">
+				<>
+					<div className="px-6 py-4 hidden md:grid md:grid-cols-12 border-b border-[#6366F1]/10  text-[#111827]/70">
+						<div className="col-span-5">Product</div>
+						<div className="col-span-2 text-center">Price</div>
+						<div className="col-span-3 text-center">Quantity</div>
+						<div className="col-span-2 text-center">Total</div>
+					</div>
+					<div className="divide-y divide-[#6366F1]/10">
+						{cartItems.map((item) => (
+							<div
+								key={item.product.id}
+								className="p-6 md:grid md:grid-cols-12 md:gap-4 md:items-center"
+							>
+								{/* Product */}
+								<div className="md:col-span-5 flex items-center space-x-4 mb-4 md:mb-0">
+									<img
+										src={item.product.image[0]}
+										alt={item.product.name}
+										className="w-16 h-16 rounded-lg object-cover border border-[#6366F1]/20"
+										onClick={() => navigate(`/products/${item.product.id}`)}
+									/>
+									<h3
+										className=" text-[#111827] truncate cursor-pointer"
+										onClick={() => navigate(`/products/${item.product.id}`)}
+									>
 										{item.product.name}
 									</h3>
-									<p className="text-brown-700 font-bold">
-										${item.product.price}
-									</p>
 								</div>
-								<div className="flex items-center gap-2 mt-2 sm:mt-0">
-									<button
-										className="bg-black font-medium text-white px-3 py-1 rounded-l vintage-cart-button"
-										onClick={() =>
-											updateQuantity(item.product.id, item.quantity - 1)
-										}
-									>
-										-
-									</button>
-									<span className="w-10 text-center bg-gray-100 py-1 font-semibold text-lg vintage-quantity">
-										{item.quantity}
+
+								{/* Price */}
+								<div className="md:col-span-2 text-[#6366F1]  font-bold text-center">
+									${item.product.price}
+								</div>
+
+								{/* Quantity */}
+								<div className="md:col-span-3 flex justify-center items-center my-4 md:my-0">
+									<div className="flex border border-[#6366F1]/30 rounded-lg overflow-hidden">
+										<button
+											className="bg-[#111827] text-[#F9FAFB] px-3 py-1"
+											onClick={() =>
+												updateQuantity(item.product.id, item.quantity - 1)
+											}
+										>
+											-
+										</button>
+										<span className="w-10 text-center py-1 ">
+											{item.quantity}
+										</span>
+										<button
+											className="bg-[#111827] text-[#F9FAFB] px-3 py-1"
+											onClick={() =>
+												updateQuantity(item.product.id, item.quantity + 1)
+											}
+										>
+											+
+										</button>
+									</div>
+								</div>
+
+								{/* Total + Remove */}
+								<div className="md:col-span-2 flex items-center justify-between md:justify-center">
+									<span className=" text-[#111827] font-bold">
+										${(item.product.price * item.quantity).toFixed(2)}
 									</span>
 									<button
-										className="bg-black font-medium text-white px-3 py-1 rounded-r vintage-cart-button"
-										onClick={() =>
-											updateQuantity(item.product.id, item.quantity + 1)
-										}
+										onClick={() => handleRemove(item.product.id)}
+										className="ml-4 p-2 text-[#111827] hover:text-[#6366F1] transition-colors"
 									>
-										+
+										<Trash2 size={18} />
 									</button>
 								</div>
 							</div>
-							<button
-								onClick={() => handleRemove(item.product.id)}
-								className="p-2 rounded-md hover:bg-red-100 vintage-cart-delete"
-							>
-								<Trash2 className="text-red-500 hover:text-red-700" />
-							</button>
-						</div>
-					))}
-				</div>
-			)}
-
-			{Array.isArray(cartItems) && cartItems.length > 0 && (
-				<div className="mt-6 border-t pt-4">
-					<h3 className="text-lg font-serif text-gray-900">
-						Total:{" "}
-						<span className="text-brown-700">${totalPrice.toFixed(2)}</span>
-					</h3>
-					<div className="flex flex-col sm:flex-row gap-2 mt-3">
-						<button
-							className="bg-red-500 text-white font-serif py-3 px-4 rounded-md hover:bg-red-600 vintage-clear-button"
-							onClick={handleClearCart}
-						>
-							Clear Cart
-						</button>
-						<button
-							className="flex-1 bg-yellow-500 text-black font-serif py-3 rounded-md hover:bg-yellow-600 vintage-checkout-button"
-							onClick={() => navigate("/checkout")}
-						>
-							Proceed to Checkout
-						</button>
+						))}
 					</div>
-				</div>
+
+					<div className="bg-[#F9FAFB] p-6 border-t border-[#6366F1]/20">
+						<div className="flex flex-col md:flex-row md:items-center md:justify-between">
+							<div className="mb-4 md:mb-0">
+								<button
+									className=" bg-[#111827] text-[#F9FAFB] py-2 px-4 rounded-lg mr-4 hover:bg-[#111827]/80"
+									onClick={handleClearCart}
+								>
+									Clear Cart
+								</button>
+							</div>
+
+							<div className="bg-[#F9FAFB] p-4 rounded-lg border border-[#6366F1]/20 md:w-64">
+								<div className="flex justify-between items-center mb-3">
+									<span className=" text-[#111827]">Total:</span>
+									<span className=" text-[#6366F1] text-xl font-bold">
+										${totalPrice.toFixed(2)}
+									</span>
+								</div>
+								<button
+									className="w-full bg-[#6366F1] text-[#F9FAFB]  py-3 rounded-lg hover:bg-[#6366F1]/90 flex items-center justify-center"
+									onClick={() => navigate("/checkout")}
+								>
+									Checkout
+									<ChevronRight className="ml-2 h-4 w-4" />
+								</button>
+							</div>
+						</div>
+					</div>
+				</>
 			)}
 		</div>
 	);

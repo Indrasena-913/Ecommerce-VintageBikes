@@ -7,11 +7,11 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "../Redux/CartSlice.js";
 import toast from "react-hot-toast";
 
-const Wishlist = () => {
+const Wishlist = ({ count, setCount }) => {
 	const [wishlist, setWishlist] = useState([]);
 	const [loading, setLoading] = useState(true);
 
-	const [count, setCount] = useState(0);
+	const [value, setvalue] = useState(0);
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
 
@@ -53,7 +53,7 @@ const Wishlist = () => {
 		} else {
 			setLoading(false);
 		}
-	}, [count]);
+	}, [value]);
 
 	const removeFromWishlist = async (productId) => {
 		try {
@@ -70,9 +70,10 @@ const Wishlist = () => {
 				}
 			);
 			if (response) {
-				setCount(count + 1);
-			} else {
 				setCount(count - 1);
+				setvalue(value + 1);
+			} else {
+				setvalue(value - 1);
 			}
 
 			console.log(response.data.message);
@@ -100,6 +101,7 @@ const Wishlist = () => {
 					},
 				}
 			);
+			setCount(count + 1);
 			toast.success("Product added to Cart");
 
 			console.log("Product added to cart successfully!");
@@ -109,23 +111,23 @@ const Wishlist = () => {
 	};
 
 	if (loading) {
-		return <div>Loading...</div>;
+		return <div className="text-center p-10 text-[#111827]">Loading...</div>;
 	}
 
 	return (
 		<div className="wishlist-container grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-24">
 			{wishlist.length === 0 ? (
-				<p>Your wishlist is empty.</p>
+				<p className="text-[#111827]">Your wishlist is empty.</p>
 			) : (
 				wishlist.map((item) => (
 					<div
 						key={item.productId}
-						className="wishlist-card relative border border-gray-300 p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-300"
+						className="wishlist-card relative border border-[#6366F1]/30 p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 bg-[#F9FAFB]"
 					>
 						{/* Remove from wishlist button */}
 						<button
 							onClick={() => removeFromWishlist(item.productId)}
-							className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-700 transition-all duration-200"
+							className="absolute top-2 right-2 bg-[#111827] text-[#F9FAFB] rounded-full p-2 hover:bg-[#6366F1] transition-all duration-200"
 						>
 							<Trash2 />
 						</button>
@@ -136,15 +138,17 @@ const Wishlist = () => {
 							className="w-full h-48 object-cover rounded-md mb-4"
 							onClick={() => navigate(`/products/${item.id}`)}
 						/>
-						<h3 className="text-lg font-semibold">{item.product.name}</h3>
-						<p className="text-gray-500">{item.product.modelYear}</p>
-						<p className="text-xl font-bold text-red-500">
+						<h3 className="text-lg font-semibold text-[#111827]">
+							{item.product.name}
+						</h3>
+						<p className="text-[#111827]/70">{item.product.modelYear}</p>
+						<p className="text-xl font-bold text-[#6366F1]">
 							${item.product.price}
 						</p>
 
 						<button
 							onClick={() => handleAddToCart(item.product)}
-							className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-all duration-200"
+							className="mt-4 bg-[#6366F1] text-[#F9FAFB] py-2 px-4 rounded-md hover:bg-[#6366F1]/80 transition-all duration-200 w-full"
 						>
 							Add to Cart
 						</button>

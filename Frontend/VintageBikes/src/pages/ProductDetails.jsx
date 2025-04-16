@@ -110,7 +110,7 @@ const ProductDetails = () => {
 								alt={`thumb-${i}`}
 								onClick={() => setMainImage(img)}
 								className={`h-16 w-20 sm:h-20 sm:w-28 rounded-xl cursor-pointer object-cover flex-shrink-0 border-2 ${
-									mainImage === img ? "border-[#D2691E]" : "border-transparent"
+									mainImage === img ? "border-[#6366F1]" : "border-transparent"
 								}`}
 							/>
 						))}
@@ -121,7 +121,7 @@ const ProductDetails = () => {
 				<div className="flex flex-col gap-6">
 					<div className="flex justify-between items-start">
 						<div>
-							<h1 className="text-3xl font-bold text-[#5E3A1D]">
+							<h1 className="text-3xl font-bold text-[#111827]">
 								{product.name}
 							</h1>
 							<p className="text-sm text-gray-600 mt-1">
@@ -132,30 +132,30 @@ const ProductDetails = () => {
 						<button onClick={handleWishlistToggle}>
 							<Heart
 								className={`w-6 h-6 transition ${
-									liked ? "fill-red-500 text-red-500" : "text-gray-400"
+									liked ? "fill-[#6366F1] text-[#6366F1]" : "text-gray-400"
 								}`}
 							/>
 						</button>
 					</div>
 
 					<div className="flex flex-wrap gap-2">
-						<span className="border-[#D2691E] border-2 text-gray-700 text-sm px-3 py-1 rounded-full">
+						<span className="border-[#6366F1] border-2 text-[#111827] text-sm px-3 py-1 rounded-full">
 							{product.category.name}
 						</span>
-						<span className="bg-yellow-100 text-yellow-800 text-sm px-3 py-1 rounded-full">
+						<span className="bg-[#6366F1]/10 text-[#6366F1] text-sm px-3 py-1 rounded-full">
 							In Stock: {product.stock}
 						</span>
 					</div>
 
-					<p className="text-gray-700 text-base leading-relaxed">
+					<p className="text-[#111827] text-base leading-relaxed">
 						{product.description}
 					</p>
 
 					<div>
-						<p className="text-[#D2691E] text-2xl font-bold">
+						<p className="text-[#6366F1] text-2xl font-bold">
 							${product.price.toLocaleString()}
 						</p>
-						<p className="text-yellow-600 text-lg">
+						<p className="text-[#6366F1] text-lg">
 							{Array.from({ length: 5 }, (_, i) =>
 								i < product.rating ? "★" : "☆"
 							).join("")}
@@ -164,21 +164,21 @@ const ProductDetails = () => {
 
 					<button
 						onClick={() => handleAddToCart(product)}
-						className="mt-2 bg-[#D2691E] text-white px-6 py-3 rounded-full hover:bg-[#a75d2a] transition"
+						className="mt-2 bg-[#6366F1] text-[#F9FAFB] px-6 py-3 rounded-full hover:bg-[#4F46E5] transition"
 					>
 						Add to Cart
 					</button>
 
 					{/* Reviews */}
 					<div className="mt-6">
-						<h2 className="text-xl font-semibold mb-2 text-[#5E3A1D]">
+						<h2 className="text-xl font-semibold mb-2 text-[#111827]">
 							Customer Reviews
 						</h2>
 						<table className="w-full border border-gray-200 rounded-xl overflow-hidden">
 							<tbody>
 								{product.reviews.map((review, i) => (
 									<tr key={i} className="border-b border-gray-100">
-										<td className="px-4 py-3 text-gray-700 border-2 border-[#cc6b0a]">
+										<td className="px-4 py-3 text-[#111827] border-2 border-[#6366F1]/30">
 											{review}
 										</td>
 									</tr>
@@ -192,14 +192,14 @@ const ProductDetails = () => {
 			{/* Related Products */}
 			{relatedProducts.length > 0 && (
 				<div className="mt-12">
-					<h2 className="text-2xl font-semibold text-[#5E3A1D] mb-4">
+					<h2 className="text-2xl font-semibold text-[#111827] mb-4">
 						Related Products
 					</h2>
 					<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 						{relatedProducts.map((rp) => (
 							<div
 								key={rp.id}
-								className="bg-[#F5EBDD] rounded-xl p-4 shadow hover:scale-[1.02] transition"
+								className="bg-[#F9FAFB] rounded-xl p-4 shadow hover:scale-[1.02] transition"
 							>
 								<img
 									src={rp.image[0]}
@@ -207,10 +207,10 @@ const ProductDetails = () => {
 									onClick={() => navigate(`/products/${rp.id}`)}
 									className="w-full h-40 sm:h-32 object-cover rounded-lg mb-2 cursor-pointer"
 								/>
-								<h3 className="text-lg font-semibold text-[#5E3A1D]">
+								<h3 className="text-lg font-semibold text-[#111827]">
 									{rp.name}
 								</h3>
-								<p className="text-[#D2691E] font-medium">
+								<p className="text-[#6366F1] font-medium">
 									${rp.price.toLocaleString()}
 								</p>
 							</div>
