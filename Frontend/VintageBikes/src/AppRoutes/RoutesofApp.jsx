@@ -1,5 +1,4 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Dashboard from "../pages/Dashboard";
@@ -8,29 +7,68 @@ import Wishlist from "../pages/Wishlist";
 import CartManager from "../pages/CartManager";
 import CheckoutForm from "../pages/CheckOutForm";
 import MyOrders from "../pages/MyOrders";
+import ForgotPasswordForm from "../ForgotPassword/FPForm";
+import ResetPasswordForm from "../ForgotPassword/ResetPForm";
+import ProtectedRoute from "../pages/ProtectedRoute";
 
 const RoutesComponent = ({ count, setCount }) => {
 	return (
 		<Routes>
+			{/* 🔓 Public Routes */}
 			<Route path="/" element={<Login />} />
-
 			<Route path="/register" element={<Register />} />
+			<Route path="/forgot-password" element={<ForgotPasswordForm />} />
+			<Route path="/reset-password/:token" element={<ResetPasswordForm />} />
+
+			{/* 🔐 Protected Routes */}
 			<Route
 				path="/dashboard"
-				element={<Dashboard count={count} setCount={setCount} />}
+				element={
+					<ProtectedRoute>
+						<Dashboard count={count} setCount={setCount} />
+					</ProtectedRoute>
+				}
 			/>
 			<Route
 				path="/products/:id"
-				element={<ProductDetails count={count} setCount={setCount} />}
+				element={
+					<ProtectedRoute>
+						<ProductDetails count={count} setCount={setCount} />
+					</ProtectedRoute>
+				}
 			/>
 			<Route
 				path="/wishlist"
-				element={<Wishlist count={count} setCount={setCount} />}
+				element={
+					<ProtectedRoute>
+						<Wishlist count={count} setCount={setCount} />
+					</ProtectedRoute>
+				}
 			/>
-			<Route path="/cart" element={<CartManager />} />
-
-			<Route path="/checkout" element={<CheckoutForm />} />
-			<Route path="/my-orders" element={<MyOrders />} />
+			<Route
+				path="/cart"
+				element={
+					<ProtectedRoute>
+						<CartManager />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/checkout"
+				element={
+					<ProtectedRoute>
+						<CheckoutForm />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/my-orders"
+				element={
+					<ProtectedRoute>
+						<MyOrders />
+					</ProtectedRoute>
+				}
+			/>
 		</Routes>
 	);
 };

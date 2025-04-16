@@ -1,17 +1,22 @@
-import { useEffect, useState } from "react";
-import {
-	FaHeart,
-	FaShoppingCart,
-	FaBox,
-	FaUserCircle,
-	FaHome,
-} from "react-icons/fa";
-import logo from "../assets/vbike.png";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSelector } from "react-redux";
 import { BASE_API_URL } from "../api";
 import axios from "axios";
+import {
+	Heart,
+	ShoppingCart,
+	Package,
+	User,
+	Home,
+	LogOut,
+	ChevronDown,
+} from "lucide-react";
+import logo from "../assets/vbike.png";
+import { useDispatch } from "react-redux";
+import { fetchCartItems } from "../Redux/CartSlice";
+import { fetchMyOrders } from "../Redux/MyOrderSlice";
 
 const Header = ({ count }) => {
 	const [showProfile, setShowProfile] = useState(false);
@@ -23,23 +28,28 @@ const Header = ({ count }) => {
 	const cartItems = useSelector((state) => state.cart.items);
 	const cartCount = cartItems.length;
 	const myOrders = useSelector((state) => state.myOrders.orders);
-	const OrderCount = myOrders.length;
-	console.log(OrderCount);
+	const orderCount = myOrders.length;
 
 	const res = localStorage.getItem("user");
 	const user = JSON.parse(res);
+	const dispatch = useDispatch();
+
+	useEffect(() => {
+		if (user?.userId) {
+			dispatch(fetchCartItems(user.userId));
+			dispatch(fetchMyOrders(user.userId));
+		}
+	}, [dispatch, user?.userId]);
 
 	useEffect(() => {
 		const fetchWishlistCount = async () => {
 			try {
 				const token = localStorage.getItem("accessToken");
-
 				const res = await axios.get(`${BASE_API_URL}/wishlist/${user.userId}`, {
 					headers: {
 						Authorization: `Bearer ${token}`,
 					},
 				});
-
 				setWishlistCount(res.data.length);
 			} catch (error) {
 				console.error("Error fetching wishlist count:", error);
@@ -47,171 +57,195 @@ const Header = ({ count }) => {
 		};
 
 		fetchWishlistCount();
-	}, [count]);
+	}, [count, user.userId]);
 
 	const handleLogout = () => {
 		localStorage.removeItem("accessToken");
 		localStorage.removeItem("user");
+		localStorage.removeItem("cartItems");
+		localStorage.removeItem("myOrders");
 		setIsLoggedIn(false);
 		navigate("/");
 	};
 
 	return (
-		<>
-			<header className="bg-[#F9FAFB] shadow-md px-4 py-3 flex justify-between items-center sticky top-0 z-50 w-full">
-				{/* Logo */}
-				<div className="flex items-center">
-					<img src={logo} alt="Vbike Logo" className="w-12 h-12 rounded-full" />
-					<h1 className="text-[#111827] font-bold text-xl ml-2 hidden sm:block">
-						Vbike
-					</h1>
-				</div>
+		<header className="bg-white shadow-sm px-6 py-3 flex justify-between items-center sticky top-0 z-50 w-full border-b border-gray-100">
+			{/* Logo */}
+			<div className="flex items-center">
+				<img
+					src={logo}
+					alt="Vbike Logo"
+					className="w-9 h-9 rounded-full object-cover"
+				/>
+				<h1 className="text-black font-bold text-xl ml-2 hidden sm:block tracking-tight">
+					VBike
+				</h1>
+			</div>
 
-				{/* Desktop Nav */}
-				<nav className="flex-1">
-					<ul className="hidden md:flex justify-end items-center md:mr-16 lg:mr-40 xl:mr-60">
-						<li className="mx-4">
-							<a
-								href="/dashboard"
-								className="text-[#111827] hover:text-[#6366F1] text-lg flex items-center gap-1"
-							>
-								<FaHome /> Home
-							</a>
-						</li>
+			{/* Desktop Nav */}
+			<nav className="flex-1">
+				<ul className="hidden md:flex justify-end items-center space-x-8 mr-4">
+					<li>
+						<a
+							href="/dashboard"
+							className="text-black hover:text-gray-700 text-sm font-medium flex items-center gap-1.5 transition-colors duration-200"
+						>
+							<Home size={15} strokeWidth={2} /> Home
+						</a>
+					</li>
 
-						<li className="mx-4 relative">
-							<a
-								href="/wishlist"
-								className="text-[#111827] hover:text-[#6366F1] text-lg flex items-center gap-1 relative"
-							>
-								<FaHeart />
-								Wishlist
-								{wishlistCount > 0 && (
-									<span className="absolute -top-2 -right-4 bg-[#111827] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-										{wishlistCount}
-									</span>
-								)}
-							</a>
-						</li>
+					<li className="relative">
+						<a
+							href="/wishlist"
+							className="text-black hover:text-gray-700 text-sm font-medium flex items-center gap-1.5 transition-colors duration-200"
+						>
+							<Heart size={15} strokeWidth={2} />
+							Wishlist
+							{wishlistCount > 0 && (
+								<span className="absolute -top-2 -right-3 bg-black text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-medium">
+									{wishlistCount}
+								</span>
+							)}
+						</a>
+					</li>
 
-						<li className="mx-4 relative">
-							<a
-								href="/cart"
-								className="text-[#111827] hover:text-[#6366F1] text-lg flex items-center gap-1 relative"
-							>
-								<FaShoppingCart />
-								Cart
-								{cartCount > 0 && (
-									<span className="absolute -top-2 -right-4 bg-[#111827] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-										{cartCount}
-									</span>
-								)}
-							</a>
-						</li>
+					<li className="relative">
+						<a
+							href="/cart"
+							className="text-black hover:text-gray-700 text-sm font-medium flex items-center gap-1.5 transition-colors duration-200"
+						>
+							<ShoppingCart size={15} strokeWidth={2} />
+							Cart
+							{cartCount > 0 && (
+								<span className="absolute -top-2 -right-3 bg-black text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-medium">
+									{cartCount}
+								</span>
+							)}
+						</a>
+					</li>
 
-						<li className="mx-4">
-							<a
-								href="/my-orders"
-								className="relative text-[#111827] hover:text-[#6366F1] text-lg flex items-center gap-1"
-							>
-								<FaBox /> My Orders
-								{OrderCount > 0 && (
-									<span className="absolute -top-2 right-0 bg-[#111827] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-										{OrderCount}
-									</span>
-								)}
-							</a>
-						</li>
+					<li className="relative">
+						<a
+							href="/my-orders"
+							className="text-black hover:text-gray-700 text-sm font-medium flex items-center gap-1.5 transition-colors duration-200"
+						>
+							<Package size={15} strokeWidth={2} />
+							Orders
+							{orderCount > 0 && (
+								<span className="absolute -top-2 -right-3 bg-black text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-medium">
+									{orderCount}
+								</span>
+							)}
+						</a>
+					</li>
 
-						{/* Profile Dropdown */}
-						<li className="mx-4 relative">
-							<button
-								onClick={() => setShowProfile(!showProfile)}
-								className="text-[#111827] hover:text-[#6366F1] text-lg flex items-center gap-1 focus:outline-none"
-							>
-								<FaUserCircle /> Profile
-							</button>
-							{showProfile && (
-								<div className="absolute right-0 mt-2 w-62 bg-[#FFFFFF] rounded-xl shadow-lg p-4 z-50 border border-[#D1D5DB]">
-									<p className="font-semibold text-[#111827]">
-										{user.userName}
-									</p>
-									<p className="text-sm text-[#6B7280] mb-3">
+					{/* Profile Dropdown */}
+					<li className="relative">
+						<button
+							onClick={() => setShowProfile(!showProfile)}
+							className="text-black hover:text-gray-700 text-sm font-medium flex items-center gap-1.5 transition-colors duration-200 focus:outline-none"
+						>
+							<User size={15} strokeWidth={2} />
+							{user.userName.split(" ")[0]}
+							<ChevronDown
+								size={14}
+								strokeWidth={2}
+								className={`transition-transform duration-200 ${
+									showProfile ? "rotate-180" : ""
+								}`}
+							/>
+						</button>
+
+						{showProfile && (
+							<div className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg p-4 z-50 border border-gray-100">
+								<div className="flex flex-col">
+									<p className="font-medium text-black">{user.userName}</p>
+									<p className="text-xs text-gray-600 mb-3 truncate">
 										{user.userEmail}
 									</p>
+									<div className="h-px bg-gray-100 my-2" />
 									<button
-										className="w-full bg-[#6366F1] text-white py-1.5 rounded-full hover:bg-[#4F46E5]"
+										className="mt-2 flex items-center gap-2 bg-black text-white py-1.5 px-4 rounded-md text-sm font-medium hover:bg-gray-900 transition-colors duration-200"
 										onClick={handleLogout}
 									>
-										Logout
+										<LogOut size={14} />
+										Sign out
 									</button>
 								</div>
-							)}
-						</li>
-					</ul>
-				</nav>
-
-				{/* Mobile Right-side Icons */}
-				<div className="flex items-center gap-4 md:hidden">
-					<a
-						href="/dashboard"
-						className="text-xl text-[#111827] hover:text-[#6366F1]"
-					>
-						<FaHome />
-					</a>
-
-					<a
-						href="/wishlist"
-						className="relative text-xl text-[#111827] hover:text-[#6366F1]"
-					>
-						<FaHeart />
-						{wishlistCount > 0 && (
-							<span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-								{wishlistCount}
-							</span>
+							</div>
 						)}
-					</a>
+					</li>
+				</ul>
+			</nav>
 
-					<a
-						href="/cart"
-						className="relative text-xl text-[#111827] hover:text-[#6366F1]"
-					>
-						<FaShoppingCart />
-						{cartCount > 0 && (
-							<span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-								{cartCount}
-							</span>
-						)}
-					</a>
+			{/* Mobile Navigation */}
+			<div className="flex items-center gap-5 md:hidden">
+				<a
+					href="/dashboard"
+					className="text-black hover:text-gray-700 transition-colors duration-200"
+				>
+					<Home size={18} strokeWidth={2} />
+				</a>
 
-					<button
-						onClick={() => setShowProfile(!showProfile)}
-						className="text-2xl text-[#111827] focus:outline-none"
-					>
-						<FaUserCircle />
-					</button>
-
-					{showProfile && (
-						<div className="absolute top-16 right-4 w-60 bg-[#FFFFFF] rounded-xl shadow-lg p-4 z-50 border border-[#D1D5DB]">
-							<p className="font-semibold text-[#111827]">{user.userName}</p>
-							<p className="text-sm text-[#6B7280] mb-3">{user.userEmail}</p>
-							<a
-								href="/my-orders"
-								className="mb-4 text-[#6366F1] hover:text-[#4F46E5] flex items-center gap-2"
-							>
-								<FaBox /> My Orders
-							</a>
-							<button
-								className="w-full bg-[#6366F1] text-white py-1.5 rounded-full hover:bg-[#4F46E5]"
-								onClick={handleLogout}
-							>
-								Logout
-							</button>
-						</div>
+				<a
+					href="/wishlist"
+					className="relative text-black hover:text-gray-700 transition-colors duration-200"
+				>
+					<Heart size={18} strokeWidth={2} />
+					{wishlistCount > 0 && (
+						<span className="absolute -top-1.5 -right-1.5 bg-black text-white text-xs rounded-full w-3.5 h-3.5 flex items-center justify-center text-[9px] font-medium">
+							{wishlistCount}
+						</span>
 					)}
-				</div>
-			</header>
-		</>
+				</a>
+
+				<a
+					href="/cart"
+					className="relative text-black hover:text-gray-700 transition-colors duration-200"
+				>
+					<ShoppingCart size={18} strokeWidth={2} />
+					{cartCount > 0 && (
+						<span className="absolute -top-1.5 -right-1.5 bg-black text-white text-xs rounded-full w-3.5 h-3.5 flex items-center justify-center text-[9px] font-medium">
+							{cartCount}
+						</span>
+					)}
+				</a>
+
+				<button
+					onClick={() => setShowProfile(!showProfile)}
+					className="text-black focus:outline-none hover:text-gray-700 transition-colors duration-200"
+				>
+					<User size={18} strokeWidth={2} />
+				</button>
+
+				{showProfile && (
+					<div className="absolute top-16 right-4 w-60 bg-white rounded-lg shadow-lg p-3 z-50 border border-gray-100">
+						<p className="font-medium text-black">{user.userName}</p>
+						<p className="text-xs text-gray-600 mb-2 truncate">
+							{user.userEmail}
+						</p>
+						<div className="h-px bg-gray-100 my-2" />
+						<a
+							href="/my-orders"
+							className="mb-3 text-black hover:text-gray-700 flex items-center gap-2 text-sm py-1"
+						>
+							<Package size={14} strokeWidth={2} /> My Orders
+							{orderCount > 0 && (
+								<span className="bg-black text-white text-xs rounded-full w-3.5 h-3.5 flex items-center justify-center text-[9px] font-medium ml-1">
+									{orderCount}
+								</span>
+							)}
+						</a>
+						<button
+							className="w-full bg-black text-white py-1.5 rounded-md text-sm font-medium hover:bg-gray-900 transition-colors duration-200 flex items-center justify-center gap-2"
+							onClick={handleLogout}
+						>
+							<LogOut size={14} /> Sign out
+						</button>
+					</div>
+				)}
+			</div>
+		</header>
 	);
 };
 

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { clearCart } from "../Redux/CartSlice";
 import { addOrder } from "../Redux/MyOrderSlice";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -66,7 +65,6 @@ const CheckoutForm = () => {
 				setShowAnimation(true);
 
 				setTimeout(() => {
-					dispatch(clearCart());
 					toast.success("Payment successful!");
 					navigate("/my-orders");
 				}, 4000);

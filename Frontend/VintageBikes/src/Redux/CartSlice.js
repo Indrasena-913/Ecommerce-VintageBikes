@@ -1,8 +1,22 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
+
+const BASE_API_URL = "http://localhost:3000"; // Make sure this matches your project setup
 
 const initialState = {
 	items: JSON.parse(localStorage.getItem("cartItems")) || [],
 };
+
+export const fetchCartItems = createAsyncThunk(
+	"cart/fetchCartItems",
+	async () => {
+		const token = localStorage.getItem("accessToken");
+		const res = await axios.get(`${BASE_API_URL}/cart/`, {
+			headers: { Authorization: `Bearer ${token}` },
+		});
+		return res.data;
+	}
+);
 
 const cartSlice = createSlice({
 	name: "cart",
@@ -35,6 +49,12 @@ const cartSlice = createSlice({
 			state.items = [];
 			localStorage.removeItem("cartItems");
 		},
+	},
+	extraReducers: (builder) => {
+		builder.addCase(fetchCartItems.fulfilled, (state, action) => {
+			state.items = action.payload;
+			localStorage.setItem("cartItems", JSON.stringify(state.items));
+		});
 	},
 });
 

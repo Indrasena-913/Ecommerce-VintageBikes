@@ -4,13 +4,17 @@ import { format } from "date-fns";
 import { Loader2, PackageCheck, CreditCard } from "lucide-react";
 import { BASE_API_URL } from "../api";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { setOrders } from "../Redux/MyOrderSlice";
+import { useAuth } from "../context/AuthContext";
 
 function MyOrders() {
-	const [orders, setOrders] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [user, setUser] = useState(null);
 	const navigate = useNavigate();
+	const orders = useSelector((state) => state.myOrders.orders);
 
+	const dispatch = useDispatch();
 	useEffect(() => {
 		const storedUser = localStorage.getItem("user");
 		if (storedUser) {
@@ -19,30 +23,29 @@ function MyOrders() {
 	}, []);
 
 	useEffect(() => {
-		if (user?.userId) {
-			const fetchOrders = async () => {
-				const token = localStorage.getItem("accessToken");
-				try {
-					const res = await axios.get(
-						`${BASE_API_URL}/myorders/${user.userId}`,
-						{
-							headers: {
-								Authorization: `Bearer ${token}`,
-							},
-						}
-					);
-					setOrders(res.data);
-					console.log(res.data);
-				} catch (error) {
-					console.error("Failed to fetch orders:", error);
-				} finally {
-					setLoading(false);
-				}
-			};
+		const fetchOrders = async () => {
+			const token = localStorage.getItem("accessToken");
+			try {
+				const res = await axios.get(`${BASE_API_URL}/myorders/${user.userId}`, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				const fetchedOrders = Array.isArray(res.data) ? res.data : [];
+				dispatch(setOrders(fetchedOrders));
+			} catch (error) {
+				console.error("Failed to fetch orders:", error);
+				dispatch(setOrders([]));
+			} finally {
+				setLoading(false);
+			}
+		};
 
+		if (user?.userId) {
 			fetchOrders();
+		} else {
+			dispatch(setOrders([]));
+			setLoading(false);
 		}
-	}, [user]);
+	}, [user, dispatch]);
 
 	if (loading) {
 		return (
@@ -83,22 +86,23 @@ function MyOrders() {
 									Date: {format(new Date(order.createdAt), "dd MMM yyyy")}
 								</p>
 								<p className="text-lg font-semibold text-gray-900">
-									${order.totalAmount}
+									₹{order.totalAmount}
 								</p>
 							</div>
 						</div>
 
+						{/* Product items */}
 						<div className="grid md:grid-cols-2 gap-4 mt-4">
 							{order.products.map((product) => (
 								<div
 									key={product.productId}
-									className="flex items-center gap-4 border rounded-xl p-3"
+									className="flex items-center gap-4 border rounded-xl p-3 cursor-pointer"
+									onClick={() => navigate(`/products/${product.productId}`)}
 								>
 									<img
 										src={product.image[0]}
 										alt={product.name}
 										className="w-16 h-16 object-cover rounded-lg"
-										onClick={() => navigate(`/products/${product.productId}`)}
 									/>
 									<div className="flex-1">
 										<p className="font-semibold text-gray-800">

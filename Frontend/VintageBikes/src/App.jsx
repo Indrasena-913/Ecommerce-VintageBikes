@@ -39,7 +39,6 @@ function App() {
 							<Header count={count} />
 						</div>
 					)}
-
 					<div className="flex-grow w-full mt-24 pt-2 main-content">
 						<RoutesComponent count={count} setCount={setCount} />
 					</div>

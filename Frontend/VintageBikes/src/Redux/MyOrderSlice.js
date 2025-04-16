@@ -1,4 +1,6 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
+import { BASE_API_URL } from "../api";
 
 const initialState = {
 	orders: JSON.parse(localStorage.getItem("myOrders")) || [],
@@ -27,7 +29,24 @@ const myOrdersSlice = createSlice({
 			localStorage.removeItem("myOrders");
 		},
 	},
+	extraReducers: (builder) => {
+		builder.addCase(fetchMyOrders.fulfilled, (state, action) => {
+			state.orders = action.payload;
+			localStorage.setItem("myOrders", JSON.stringify(state.orders));
+		});
+	},
 });
+
+export const fetchMyOrders = createAsyncThunk(
+	"myOrders/fetchMyOrders",
+	async (userId) => {
+		const token = localStorage.getItem("accessToken");
+		const res = await axios.get(`${BASE_API_URL}/myorders/${userId}`, {
+			headers: { Authorization: `Bearer ${token}` },
+		});
+		return res.data;
+	}
+);
 
 export const { setOrders, addOrder, removeOrder, clearOrders } =
 	myOrdersSlice.actions;

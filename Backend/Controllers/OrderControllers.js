@@ -2,7 +2,7 @@ import prisma from "../PrismaClient.js";
 
 export const GetOrders = async (req, res) => {
 	const userId = parseInt(req.params.userId);
-	console.log(userId);
+	console.log("userId from orders", userId);
 
 	try {
 		const orders = await prisma.order.findMany({

@@ -2,95 +2,151 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart, setCart, clearCart } from "../Redux/CartSlice";
 import { BASE_API_URL } from "../api";
-import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import { Trash2, ShoppingBag, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const CartManager = () => {
-	const { user } = useAuth();
 	const token = localStorage.getItem("accessToken");
 	const dispatch = useDispatch();
 	const cartItems = useSelector((state) => state.cart.items);
 	const [loading, setLoading] = useState(true);
+	const [user, setUser] = useState(null);
 	const navigate = useNavigate();
-	console.log(cartItems);
 
 	useEffect(() => {
+		const storedUser = localStorage.getItem("user");
+		if (storedUser) {
+			setUser(JSON.parse(storedUser));
+		}
+	}, []);
+	useEffect(() => {
 		const fetchCart = async () => {
+			console.log("fetching products");
+
 			try {
 				const res = await axios.get(`${BASE_API_URL}/cart`, {
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const items = Array.isArray(res.data) ? res.data : [];
+				console.log(items);
+
 				dispatch(setCart(items));
-				setLoading(false);
+				// localStorage.removeItem("cartItems");
 			} catch (err) {
 				console.error("Failed to fetch cart:", err);
 				dispatch(setCart([]));
-				setLoading(false);
 			}
+			setLoading(false);
 		};
 
-		if (!user?.userId) {
+		const loadGuestCart = () => {
 			try {
 				const cartFromLocalStorage = JSON.parse(
 					localStorage.getItem("cartItems") || "[]"
 				);
-				const items = Array.isArray(cartFromLocalStorage)
-					? cartFromLocalStorage
-					: [];
-				dispatch(setCart(items));
+				dispatch(setCart(cartFromLocalStorage));
 			} catch (error) {
 				console.error("Error parsing cart from localStorage:", error);
 				dispatch(setCart([]));
 			}
 			setLoading(false);
-		} else {
+		};
+
+		if (user?.userId) {
 			fetchCart();
+		} else {
+			loadGuestCart();
 		}
 	}, [user?.userId, token, dispatch]);
 
+	const handleAddToCart = async (product) => {
+		if (user?.userId) {
+			try {
+				const res = await axios.post(
+					`${BASE_API_URL}/cart`,
+					{ productId: product.id, quantity: 1 },
+					{ headers: { Authorization: `Bearer ${token}` } }
+				);
+				dispatch(addToCart(res.data));
+			} catch (err) {
+				console.error("Error adding to cart:", err);
+			}
+		} else {
+			const existing = cartItems.find((item) => item.product.id === product.id);
+			let updatedCart;
+			if (existing) {
+				updatedCart = cartItems.map((item) =>
+					item.product.id === product.id
+						? { ...item, quantity: item.quantity + 1 }
+						: item
+				);
+			} else {
+				updatedCart = [...cartItems, { product, quantity: 1 }];
+			}
+			localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+			dispatch(setCart(updatedCart));
+		}
+	};
+
 	const handleRemove = async (productId) => {
-		try {
-			const res = await axios.delete(`${BASE_API_URL}/cart/${productId}`, {
-				headers: { Authorization: `Bearer ${token}` },
-			});
-			const items = Array.isArray(res.data) ? res.data : [];
-			dispatch(setCart(items));
-		} catch (err) {
-			console.error("Error removing from cart:", err);
+		if (user?.userId) {
+			try {
+				const res = await axios.delete(`${BASE_API_URL}/cart/${productId}`, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				const items = Array.isArray(res.data) ? res.data : [];
+				dispatch(setCart(items));
+			} catch (err) {
+				console.error("Error removing from cart:", err);
+			}
+		} else {
+			const updatedCart = cartItems.filter(
+				(item) => item.product.id !== productId
+			);
+			localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+			dispatch(setCart(updatedCart));
 		}
 	};
 
 	const handleClearCart = async () => {
-		try {
-			await axios.delete(`${BASE_API_URL}/cart`, {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+		if (user?.userId) {
+			try {
+				await axios.delete(`${BASE_API_URL}/cart`, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				dispatch(clearCart());
+			} catch (err) {
+				console.error("Error clearing cart:", err);
+			}
+		} else {
+			localStorage.removeItem("cartItems");
 			dispatch(clearCart());
-		} catch (err) {
-			console.error("Error clearing cart:", err);
 		}
 	};
 
 	const updateQuantity = async (productId, newQuantity) => {
-		console.log(newQuantity);
+		if (newQuantity < 1) return handleRemove(productId);
 
-		if (newQuantity < 1) {
-			return handleRemove(productId);
-		}
-
-		try {
-			const res = await axios.patch(
-				`${BASE_API_URL}/cart/${productId}`,
-				{ quantity: newQuantity },
-				{ headers: { Authorization: `Bearer ${token}` } }
+		if (user?.userId) {
+			try {
+				const res = await axios.patch(
+					`${BASE_API_URL}/cart/${productId}`,
+					{ quantity: newQuantity },
+					{ headers: { Authorization: `Bearer ${token}` } }
+				);
+				dispatch(addToCart(res.data));
+			} catch (err) {
+				console.error("Error updating quantity:", err);
+			}
+		} else {
+			const updatedCart = cartItems.map((item) =>
+				item.product.id === productId
+					? { ...item, quantity: newQuantity }
+					: item
 			);
-
-			dispatch(addToCart(res.data));
-		} catch (err) {
-			console.error("Error updating quantity:", err);
+			localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+			dispatch(setCart(updatedCart));
 		}
 	};
 

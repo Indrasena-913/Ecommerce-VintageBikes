@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import axios from "axios";
 import { BASE_API_URL } from "../api.jsx";
 import {
@@ -9,12 +9,46 @@ import {
 	ChevronRight,
 	SlidersHorizontal,
 	RefreshCw,
+	X,
+	Star,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toggleWishlist } from "./AddtoWishList.jsx";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../Redux/CartSlice.js";
 import toast from "react-hot-toast";
+
+// Skeleton components
+const ProductSkeleton = () => (
+	<div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full animate-pulse">
+		<div className="h-48 bg-gray-200"></div>
+		<div className="p-4 flex-grow flex flex-col gap-3">
+			<div className="h-6 bg-gray-200 rounded w-3/4"></div>
+			<div className="flex justify-between items-center">
+				<div className="h-5 bg-gray-200 rounded w-1/4"></div>
+				<div className="flex gap-1">
+					{[...Array(5)].map((_, i) => (
+						<div key={i} className="h-4 w-4 bg-gray-200 rounded-full"></div>
+					))}
+				</div>
+			</div>
+			<div className="h-10 bg-gray-200 rounded mt-auto"></div>
+		</div>
+	</div>
+);
+
+const FilterSkeleton = () => (
+	<div className="bg-white rounded-lg shadow-sm p-4 mb-6 animate-pulse">
+		<div className="flex flex-col md:flex-row gap-3 items-center">
+			<div className="h-10 bg-gray-200 rounded w-full"></div>
+			<div className="h-10 bg-gray-200 rounded w-full md:w-52"></div>
+			<div className="flex gap-2 shrink-0">
+				<div className="h-10 w-28 bg-gray-200 rounded"></div>
+				<div className="h-10 w-10 bg-gray-200 rounded"></div>
+			</div>
+		</div>
+	</div>
+);
 
 const Dashboard = ({ count, setCount }) => {
 	const [products, setProducts] = useState([]);
@@ -29,6 +63,8 @@ const Dashboard = ({ count, setCount }) => {
 	const [sortBy, setSortBy] = useState("price");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [showFilters, setShowFilters] = useState(false);
+	const [loading, setLoading] = useState(true);
+	const [imageLoaded, setImageLoaded] = useState({});
 
 	const productsPerPage = 8;
 	const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
@@ -41,6 +77,7 @@ const Dashboard = ({ count, setCount }) => {
 	useEffect(() => {
 		const fetchProductsAndCategories = async () => {
 			try {
+				setLoading(true);
 				const token = localStorage.getItem("accessToken");
 
 				const productResponse = await axios.get(`${BASE_API_URL}/products`, {
@@ -59,9 +96,11 @@ const Dashboard = ({ count, setCount }) => {
 				});
 
 				setCategories(categoryResponse.data);
+				setTimeout(() => setLoading(false), 800); // Simulate loading for better UX
 			} catch (error) {
 				console.error("Error fetching products or categories:", error);
 				toast.error("Failed to load products. Please try again.");
+				setLoading(false);
 			}
 		};
 
@@ -182,200 +221,248 @@ const Dashboard = ({ count, setCount }) => {
 		toast.success("Filters have been reset");
 	};
 
+	const handleImageLoad = (productId) => {
+		setImageLoaded((prev) => ({
+			...prev,
+			[productId]: true,
+		}));
+	};
+
 	return (
-		<div className="min-h-screen bg-[#F9FAFB] pt-16 pb-12">
+		<div className="min-h-screen bg-gray-50 pt-16 pb-12">
 			<div className="container mx-auto px-4 z-10 relative">
 				{/* Header Section */}
 				<div className="mb-10 text-center">
-					<h1 className="text-4xl font-bold text-[#111827] mb-2">
+					<h1 className="text-4xl font-bold text-black tracking-tight mb-2">
 						Vintage Collection
 					</h1>
-					<p className="text-[#111827] text-opacity-70 italic">
+					<p className="text-gray-600 italic">
 						Discover timeless classics for your collection
 					</p>
 				</div>
 
-				{/* Search and Primary Filters */}
-				<div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-[#111827] border-opacity-10">
-					<div className="flex flex-col md:flex-row gap-4 items-center mb-4">
-						<div className="relative flex-grow">
-							<input
-								type="text"
-								placeholder="Search motorcycles..."
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
-								className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-[#111827] border-opacity-20 focus:border-[#6366F1] focus:outline-none transition-colors"
-							/>
-							<Search
-								className="absolute left-3 top-3 text-[#111827] opacity-70"
-								size={20}
-							/>
-						</div>
+				{/* Filter Section - New Compact Design */}
+				{loading ? (
+					<FilterSkeleton />
+				) : (
+					<div className="bg-white rounded-lg shadow-sm p-4 mb-5 border border-gray-200">
+						{/* Main filter row */}
+						<div className="flex flex-col md:flex-row gap-3 items-center">
+							<div className="relative flex-grow">
+								<input
+									type="text"
+									placeholder="Search motorcycles..."
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.target.value)}
+									className="w-full pl-9 pr-3 py-2 h-10 text-sm rounded-md border border-gray-300 focus:border-black focus:ring-1 focus:ring-black focus:outline-none transition-colors"
+								/>
+								<Search
+									className="absolute left-3 top-2.5 text-gray-500"
+									size={16}
+								/>
+								{searchQuery && (
+									<button
+										onClick={() => setSearchQuery("")}
+										className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+									>
+										<X size={14} />
+									</button>
+								)}
+							</div>
 
-						<div className="relative flex-grow md:max-w-xs">
-							<select
-								value={selectedCategory}
-								onChange={(e) => setSelectedCategory(e.target.value)}
-								className="w-full pl-4 pr-10 py-3 rounded-lg border-2 border-[#111827] border-opacity-20 focus:border-[#6366F1] focus:outline-none appearance-none transition-colors bg-white"
-							>
-								<option value="">All Categories</option>
-								{categories.map((category) => (
-									<option key={category.id} value={category.name}>
-										{category.name}
-									</option>
-								))}
-							</select>
-							<div className="absolute right-3 top-3 pointer-events-none">
-								<Filter size={20} className="text-[#111827] opacity-70" />
+							<div className="relative md:w-52 w-full shrink-0">
+								<select
+									value={selectedCategory}
+									onChange={(e) => setSelectedCategory(e.target.value)}
+									className="w-full pl-3 pr-8 py-2 h-10 text-sm rounded-md border border-gray-300 focus:border-black focus:ring-1 focus:ring-black focus:outline-none appearance-none transition-colors bg-white"
+								>
+									<option value="">All Categories</option>
+									{categories.map((category) => (
+										<option key={category.id} value={category.name}>
+											{category.name}
+										</option>
+									))}
+								</select>
+								<div className="absolute right-3 top-2.5 pointer-events-none">
+									<Filter size={14} className="text-gray-500" />
+								</div>
+							</div>
+
+							<div className="flex gap-2 shrink-0 w-full md:w-auto">
+								<button
+									onClick={() => setShowFilters(!showFilters)}
+									className="px-3 py-2 h-10 rounded-md bg-black hover:bg-gray-900 text-white transition-colors flex items-center gap-1.5 text-sm flex-1 md:flex-none justify-center md:justify-start"
+								>
+									<SlidersHorizontal size={14} />
+									<span className="font-medium">
+										{showFilters ? "Hide" : "Filters"}
+									</span>
+								</button>
+
+								<button
+									onClick={resetFilters}
+									className="h-10 w-10 rounded-md bg-white border border-gray-300 hover:border-black text-gray-700 transition-colors flex items-center justify-center"
+									title="Reset all filters"
+								>
+									<RefreshCw size={14} />
+								</button>
 							</div>
 						</div>
 
-						<div className="flex gap-2">
-							<button
-								onClick={() => setShowFilters(!showFilters)}
-								className="px-4 py-3 rounded-lg bg-[#6366F1] hover:bg-[#4F46E5] text-white transition-colors flex items-center gap-2"
-							>
-								<SlidersHorizontal size={20} />
-								<span>{showFilters ? "Hide Filters" : "More Filters"}</span>
-							</button>
+						{/* Advanced Filters - Collapsible section */}
+						{showFilters && (
+							<div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-12 gap-5 text-sm">
+								{/* Price Range Slider */}
+								<div className="space-y-2 md:col-span-4">
+									<div className="flex justify-between mb-1">
+										<label className="text-gray-700 font-medium text-xs">
+											Price Range
+										</label>
+										<span className="text-black font-medium text-xs">
+											${priceRange[0]} - ${priceRange[1]}
+										</span>
+									</div>
+									<input
+										type="range"
+										min={0}
+										max={10000}
+										value={priceRange[1]}
+										onChange={(e) =>
+											setPriceRange([priceRange[0], parseInt(e.target.value)])
+										}
+										className="w-full h-1.5 accent-black"
+									/>
+									<div className="flex justify-between text-xs text-gray-500 mt-1">
+										<span>$0</span>
+										<span>$10,000</span>
+									</div>
+								</div>
 
-							<button
-								onClick={resetFilters}
-								className="px-4 py-3 rounded-lg bg-white border-2 border-[#6366F1] text-[#6366F1] hover:bg-[#F9FAFB] transition-colors flex items-center gap-2"
-								title="Reset all filters"
-							>
-								<RefreshCw size={20} />
-								<span className="hidden md:inline">Reset</span>
-							</button>
-						</div>
+								{/* Year Range Slider */}
+								<div className="space-y-2 md:col-span-4">
+									<div className="flex justify-between mb-1">
+										<label className="text-gray-700 font-medium text-xs">
+											Year Range
+										</label>
+										<span className="text-black font-medium text-xs">
+											{yearRange[0]} - {yearRange[1]}
+										</span>
+									</div>
+									<input
+										type="range"
+										min={1900}
+										max={2025}
+										value={yearRange[1]}
+										onChange={(e) =>
+											setYearRange([yearRange[0], parseInt(e.target.value)])
+										}
+										className="w-full h-1.5 accent-black"
+									/>
+									<div className="flex justify-between text-xs text-gray-500 mt-1">
+										<span>1900</span>
+										<span>2025</span>
+									</div>
+								</div>
+
+								{/* Sort Options */}
+								<div className="md:col-span-4">
+									<label className="text-gray-700 font-medium text-xs block mb-2">
+										Sort By
+									</label>
+									<div className="grid grid-cols-2 gap-2">
+										<button
+											className={`px-3 py-1.5 rounded-md text-xs transition-colors ${
+												sortBy === "price_asc"
+													? "bg-black text-white"
+													: "bg-gray-100 text-gray-800 hover:bg-gray-200"
+											}`}
+											onClick={() => setSortBy("price_asc")}
+										>
+											Price: Low to High
+										</button>
+										<button
+											className={`px-3 py-1.5 rounded-md text-xs transition-colors ${
+												sortBy === "price_desc"
+													? "bg-black text-white"
+													: "bg-gray-100 text-gray-800 hover:bg-gray-200"
+											}`}
+											onClick={() => setSortBy("price_desc")}
+										>
+											Price: High to Low
+										</button>
+										<button
+											className={`px-3 py-1.5 rounded-md text-xs transition-colors ${
+												sortBy === "year_asc"
+													? "bg-black text-white"
+													: "bg-gray-100 text-gray-800 hover:bg-gray-200"
+											}`}
+											onClick={() => setSortBy("year_asc")}
+										>
+											Year: Old to New
+										</button>
+										<button
+											className={`px-3 py-1.5 rounded-md text-xs transition-colors ${
+												sortBy === "year_desc"
+													? "bg-black text-white"
+													: "bg-gray-100 text-gray-800 hover:bg-gray-200"
+											}`}
+											onClick={() => setSortBy("year_desc")}
+										>
+											Year: New to Old
+										</button>
+									</div>
+								</div>
+							</div>
+						)}
 					</div>
-
-					{/* Advanced Filters */}
-					{showFilters && (
-						<div className="mt-6 pt-6 border-t border-[#111827] border-opacity-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-							<div className="space-y-2">
-								<label className="block text-[#111827] font-medium">
-									Price Range: ${priceRange[0]} - ${priceRange[1]}
-								</label>
-								<input
-									type="range"
-									min={0}
-									max={10000}
-									value={priceRange[1]}
-									onChange={(e) =>
-										setPriceRange([priceRange[0], parseInt(e.target.value)])
-									}
-									className="w-full accent-[#6366F1]"
-								/>
-								<div className="flex justify-between text-sm text-[#111827] text-opacity-70">
-									<span>$0</span>
-									<span>$10,000</span>
-								</div>
-							</div>
-
-							<div className="space-y-2">
-								<label className="block text-[#111827] font-medium">
-									Year Range: {yearRange[0]} - {yearRange[1]}
-								</label>
-								<input
-									type="range"
-									min={1900}
-									max={2025}
-									value={yearRange[1]}
-									onChange={(e) =>
-										setYearRange([yearRange[0], parseInt(e.target.value)])
-									}
-									className="w-full accent-[#6366F1]"
-								/>
-								<div className="flex justify-between text-sm text-[#111827] text-opacity-70">
-									<span>1900</span>
-									<span>2025</span>
-								</div>
-							</div>
-
-							<div className="md:col-span-2">
-								<label className="block text-[#111827] font-medium mb-2">
-									Sort By
-								</label>
-								<div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-									<button
-										className={`px-4 py-2 rounded-full border-2 text-sm font-medium transition-colors ${
-											sortBy === "price_asc"
-												? "bg-[#6366F1] border-[#6366F1] text-white"
-												: "border-[#111827] border-opacity-30 text-[#111827] hover:border-[#6366F1]"
-										}`}
-										onClick={() => setSortBy("price_asc")}
-									>
-										Price: Low to High
-									</button>
-									<button
-										className={`px-4 py-2 rounded-full border-2 text-sm font-medium transition-colors ${
-											sortBy === "price_desc"
-												? "bg-[#6366F1] border-[#6366F1] text-white"
-												: "border-[#111827] border-opacity-30 text-[#111827] hover:border-[#6366F1]"
-										}`}
-										onClick={() => setSortBy("price_desc")}
-									>
-										Price: High to Low
-									</button>
-									<button
-										className={`px-4 py-2 rounded-full border-2 text-sm font-medium transition-colors ${
-											sortBy === "year_asc"
-												? "bg-[#6366F1] border-[#6366F1] text-white"
-												: "border-[#111827] border-opacity-30 text-[#111827] hover:border-[#6366F1]"
-										}`}
-										onClick={() => setSortBy("year_asc")}
-									>
-										Year: Old to New
-									</button>
-									<button
-										className={`px-4 py-2 rounded-full border-2 text-sm font-medium transition-colors ${
-											sortBy === "year_desc"
-												? "bg-[#6366F1] border-[#6366F1] text-white"
-												: "border-[#111827] border-opacity-30 text-[#111827] hover:border-[#6366F1]"
-										}`}
-										onClick={() => setSortBy("year_desc")}
-									>
-										Year: New to Old
-									</button>
-								</div>
-							</div>
-						</div>
-					)}
-				</div>
+				)}
 
 				{/* Results Summary */}
 				<div className="mb-6 flex justify-between items-center">
-					<h2 className="text-xl font-semibold text-[#111827]">
+					<h2 className="text-lg font-medium text-black">
 						Found{" "}
-						<span className="text-[#6366F1]">{filteredProducts.length}</span>{" "}
+						<span className="font-semibold">{filteredProducts.length}</span>{" "}
 						vintage motorcycles
 					</h2>
-					<div className="text-sm text-[#111827] text-opacity-70">
+					<div className="text-sm text-gray-600">
 						Page {currentPage} of {totalPages || 1}
 					</div>
 				</div>
 
 				{/* Product Grid */}
-				{paginatedProducts.length > 0 ? (
+				{loading ? (
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+						{[...Array(8)].map((_, index) => (
+							<ProductSkeleton key={index} />
+						))}
+					</div>
+				) : paginatedProducts.length > 0 ? (
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 						{paginatedProducts.map((product) => (
 							<div
 								key={product.id}
-								className="bg-white rounded-2xl shadow-md overflow-hidden transition hover:shadow-lg border border-[#111827] border-opacity-10 flex flex-col h-full"
+								className="bg-white rounded-lg shadow-sm overflow-hidden transition hover:shadow-md border border-gray-200 flex flex-col h-full"
 							>
 								<div
-									className="relative cursor-pointer h-56 overflow-hidden"
+									className="relative cursor-pointer h-48 overflow-hidden bg-gray-100"
 									onClick={() => navigate(`/products/${product.id}`)}
 								>
+									{!imageLoaded[product.id] && (
+										<div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+											<div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+										</div>
+									)}
 									<img
 										src={product.image[0]}
 										alt={product.name}
-										className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+										className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${
+											imageLoaded[product.id] ? "opacity-100" : "opacity-0"
+										}`}
+										onLoad={() => handleImageLoad(product.id)}
 									/>
-									<div className="absolute top-3 right-3">
+									<div className="absolute top-2 right-2">
 										<button
-											className="bg-white p-2 rounded-full shadow-md transition-all duration-200 hover:scale-110 hover:bg-[#F9FAFB]"
+											className="bg-white p-2 rounded-full shadow-sm transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-black"
 											onClick={(e) => {
 												e.stopPropagation();
 												handleWishlistClick(product.id);
@@ -383,60 +470,55 @@ const Dashboard = ({ count, setCount }) => {
 											disabled={isWishlistLoading}
 										>
 											<Heart
-												className={`h-5 w-5 ${
+												className={`h-4 w-4 ${
 													likedProducts.includes(product.id)
-														? "fill-[#6366F1] text-[#6366F1]"
-														: "text-[#111827] text-opacity-40"
+														? "fill-black text-black"
+														: "text-gray-500"
 												}`}
 											/>
 										</button>
 									</div>
-									<div className="absolute bottom-0 w-full bg-gradient-to-t from-black to-transparent py-1">
-										<div className="flex justify-center gap-2">
-											<span className="text-white text-xs px-3 py-1 rounded-full bg-[#111827] bg-opacity-90">
+									<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent py-1 px-2">
+										<div className="flex justify-start gap-2">
+											<span className="text-white text-xs px-2 py-1 rounded-sm bg-black/80">
 												{product.category.name}
 											</span>
-											<span className="text-white text-xs px-3 py-1 rounded-full bg-[#6366F1] bg-opacity-90">
+											<span className="text-white text-xs px-2 py-1 rounded-sm bg-gray-700/80">
 												{product.modelYear}
 											</span>
 										</div>
 									</div>
 								</div>
 
-								<div className="p-5 flex-grow flex flex-col">
+								<div className="p-4 flex-grow flex flex-col">
 									<h3
-										className="text-xl font-bold text-[#111827] mb-2 cursor-pointer hover:text-[#6366F1]"
+										className="text-base font-medium text-black mb-1 cursor-pointer hover:underline line-clamp-2"
 										onClick={() => navigate(`/products/${product.id}`)}
 									>
 										{product.name}
 									</h3>
 
-									<p className="text-sm text-[#111827] text-opacity-70 mb-4 flex-grow line-clamp-3">
-										{product.description}
-									</p>
-
-									<div className="flex justify-between items-center mb-4">
-										<p className="text-[#6366F1] font-bold text-xl">
+									<div className="flex justify-between items-center mb-3">
+										<p className="text-black font-semibold">
 											${product.price.toLocaleString()}
 										</p>
-										<div className="text-sm">
+										<div className="flex items-center text-xs">
 											{Array.from({ length: 5 }, (_, index) => (
-												<span
+												<Star
 													key={index}
+													size={12}
 													className={
 														index < product.rating
-															? "text-[#6366F1]"
-															: "text-[#111827] text-opacity-20"
+															? "fill-black text-black"
+															: "text-gray-300"
 													}
-												>
-													★
-												</span>
+												/>
 											))}
 										</div>
 									</div>
 
 									<button
-										className="w-full py-3 rounded-lg bg-[#6366F1] hover:bg-[#4F46E5] text-white font-medium transition-colors"
+										className="w-full py-2 rounded-md bg-black hover:bg-gray-900 text-white text-sm font-medium transition-colors mt-auto"
 										onClick={() => handleAddToCart(product)}
 									>
 										Add to Cart
@@ -446,48 +528,48 @@ const Dashboard = ({ count, setCount }) => {
 						))}
 					</div>
 				) : (
-					<div className="bg-white rounded-xl shadow-md p-8 text-center border border-[#111827] border-opacity-10">
-						<h3 className="text-xl font-medium text-[#111827] mb-2">
+					<div className="bg-white rounded-lg shadow-sm p-8 text-center border border-gray-200">
+						<h3 className="text-lg font-medium text-black mb-2">
 							No products found
 						</h3>
-						<p className="text-[#111827] text-opacity-70">
+						<p className="text-gray-600 text-sm">
 							Try adjusting your search criteria or filters
 						</p>
 					</div>
 				)}
 
 				{/* Pagination */}
-				{totalPages > 1 && (
+				{!loading && totalPages > 1 && (
 					<div className="mt-10 flex justify-center">
-						<div className="inline-flex rounded-lg border border-[#111827] border-opacity-20 overflow-hidden">
+						<div className="inline-flex rounded-md border border-gray-200 overflow-hidden">
 							<button
 								onClick={() => setCurrentPage(currentPage - 1)}
 								disabled={currentPage === 1}
-								className={`px-5 py-3 flex items-center gap-2 ${
+								className={`px-4 py-2 flex items-center gap-1 text-sm ${
 									currentPage === 1
-										? "bg-[#F9FAFB] text-[#111827] text-opacity-40 cursor-not-allowed"
-										: "bg-white text-[#111827] hover:bg-[#F9FAFB]"
-								} transition-colors border-r border-[#111827] border-opacity-20`}
+										? "bg-gray-50 text-gray-400 cursor-not-allowed"
+										: "bg-white text-black hover:bg-gray-50"
+								} transition-colors border-r border-gray-200`}
 							>
-								<ChevronLeft size={18} />
+								<ChevronLeft size={14} />
 								<span className="hidden sm:inline">Previous</span>
 							</button>
 
-							<div className="px-5 py-3 bg-white text-[#111827] font-medium flex items-center">
-								Page {currentPage} of {totalPages}
+							<div className="px-4 py-2 bg-white text-black text-sm font-medium flex items-center">
+								{currentPage} / {totalPages}
 							</div>
 
 							<button
 								onClick={() => setCurrentPage(currentPage + 1)}
 								disabled={currentPage === totalPages}
-								className={`px-5 py-3 flex items-center gap-2 ${
+								className={`px-4 py-2 flex items-center gap-1 text-sm ${
 									currentPage === totalPages
-										? "bg-[#F9FAFB] text-[#111827] text-opacity-40 cursor-not-allowed"
-										: "bg-white text-[#111827] hover:bg-[#F9FAFB]"
-								} transition-colors border-l border-[#111827] border-opacity-20`}
+										? "bg-gray-50 text-gray-400 cursor-not-allowed"
+										: "bg-white text-black hover:bg-gray-50"
+								} transition-colors border-l border-gray-200`}
 							>
 								<span className="hidden sm:inline">Next</span>
-								<ChevronRight size={18} />
+								<ChevronRight size={14} />
 							</button>
 						</div>
 					</div>
