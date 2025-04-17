@@ -63,7 +63,7 @@ export const loginUser = async (req, res) => {
 		});
 
 		if (!user) {
-			return res.status(404).json({ message: "User not found" });
+			return res.status(404).json({ message: "email not found" });
 		}
 
 		if (!user.verified) {
@@ -75,7 +75,7 @@ export const loginUser = async (req, res) => {
 		const isPasswordValid = await bcrypt.compare(password, user.password);
 
 		if (!isPasswordValid) {
-			return res.status(401).json({ message: "Invalid credentials" });
+			return res.status(401).json({ message: "Invalid Password" });
 		}
 
 		const { accessToken, refreshToken } = generateTokens(user.id, user.email);

@@ -235,18 +235,12 @@ const ProductDetails = ({ count, setCount }) => {
 			<div className="flex items-center text-sm text-gray-500 mb-6">
 				<span
 					className="hover:text-black cursor-pointer"
-					onClick={() => navigate("/")}
+					onClick={() => navigate("/dashboard")}
 				>
 					Home
 				</span>
 				<ChevronRight className="w-4 h-4 mx-1" />
-				<span
-					className="hover:text-black cursor-pointer"
-					onClick={() => navigate("/products")}
-				>
-					Products
-				</span>
-				<ChevronRight className="w-4 h-4 mx-1" />
+
 				<span className="text-black font-medium truncate max-w-xs">
 					{product.name}
 				</span>

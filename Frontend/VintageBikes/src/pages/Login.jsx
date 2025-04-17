@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -34,6 +34,7 @@ const Login = () => {
 	const { setIsLoggedIn } = useAuth();
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [loginError, setLoginError] = useState("");
 
 	const {
 		register,
@@ -43,6 +44,17 @@ const Login = () => {
 	} = useForm();
 
 	const navigate = useNavigate();
+
+	useEffect(() => {
+		const token = localStorage.getItem("accessToken");
+		const user = localStorage.getItem("user");
+
+		if (token && user) {
+			setIsLoggedIn(true);
+
+			navigate("/dashboard");
+		}
+	}, []);
 
 	const onSubmit = async (data) => {
 		setIsLoading(true);
@@ -54,7 +66,9 @@ const Login = () => {
 			setIsLoggedIn(true);
 			navigate("/dashboard");
 		} catch (error) {
-			console.error("Login Error:", error.response?.data || error.message);
+			setLoginError(
+				error.response?.data?.message || "Invalid email or password"
+			);
 		} finally {
 			setIsLoading(false);
 			reset();
@@ -133,10 +147,6 @@ const Login = () => {
 								placeholder="Password"
 								{...register("password", {
 									required: "Password is required",
-									minLength: {
-										value: 6,
-										message: "Password must be at least 6 characters",
-									},
 								})}
 								className="w-full p-3 pl-10 rounded-lg bg-gray-50 border border-gray-300 text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
 							/>
@@ -153,6 +163,11 @@ const Login = () => {
 								</p>
 							)}
 						</div>
+						{loginError && (
+							<p className="text-red-600 text-md  font-medium text-center">
+								{loginError}
+							</p>
+						)}
 
 						<div className="flex justify-end">
 							<button

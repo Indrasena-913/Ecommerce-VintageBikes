@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import RegisterImage2 from "../assets/RegisterImage2.png";
 import MobileImage from "../assets/MobileImage.jpeg";
+import toast from "react-hot-toast";
 
 const ImageSkeleton = () => (
 	<div className="animate-pulse flex items-center justify-center w-full h-full bg-gray-200 rounded-lg">
@@ -56,6 +57,10 @@ const Register = () => {
 		try {
 			const response = await axios.post(`${BASE_API_URL}/register`, data);
 			console.log("Register Success:", response.data);
+			toast.success("User registered successfully");
+			setTimeout(() => {
+				toast.success("Please verify your email");
+			}, 2000);
 			navigate("/");
 		} catch (error) {
 			console.error("Register Error:", error.response?.data || error.message);

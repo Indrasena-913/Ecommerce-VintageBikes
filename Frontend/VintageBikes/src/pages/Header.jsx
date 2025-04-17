@@ -13,7 +13,7 @@ import {
 	LogOut,
 	ChevronDown,
 } from "lucide-react";
-import logo from "../assets/vbike.png";
+import logo from "../assets/vbike2.png";
 import { useDispatch } from "react-redux";
 import { fetchCartItems } from "../Redux/CartSlice";
 import { fetchMyOrders } from "../Redux/MyOrderSlice";
@@ -75,9 +75,10 @@ const Header = ({ count }) => {
 				<img
 					src={logo}
 					alt="Vbike Logo"
-					className="w-9 h-9 rounded-full object-cover"
+					className="w-9 h-9 rounded-full object-cover scale-140"
+					onClick={() => navigate("/dashboard")}
 				/>
-				<h1 className="text-black font-bold text-xl ml-2 hidden sm:block tracking-tight">
+				<h1 className="text-black font-bold text-xl ml-2 hidden sm:block tracking-tight logo-font">
 					VBike
 				</h1>
 			</div>
