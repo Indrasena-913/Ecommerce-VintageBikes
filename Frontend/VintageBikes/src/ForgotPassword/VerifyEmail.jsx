@@ -14,6 +14,8 @@ const VerifyEmail = () => {
 				const response = await axios.get(
 					`${BASE_API_URL}/verify-email/${token}`
 				);
+				console.log(response.data);
+
 				if (response.data.success) {
 					setStatus("success");
 					setTimeout(() => navigate("/"), 3000);
