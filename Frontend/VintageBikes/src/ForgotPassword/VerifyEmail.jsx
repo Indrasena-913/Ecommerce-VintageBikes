@@ -13,12 +13,12 @@ const VerifyEmail = () => {
 	useEffect(() => {
 		const verifyEmail = async () => {
 			try {
-				const response = await axios.get(`${BASE_API_URL}/verify-email`, {
-					params: { token },
-				});
+				const response = await axios.get(
+					`${BASE_API_URL}/verify-email/${token}`
+				);
 				if (response.data.success) {
 					setStatus("success");
-					setTimeout(() => navigate("/login"), 3000);
+					setTimeout(() => navigate("/"), 3000);
 				} else {
 					setStatus("error");
 				}

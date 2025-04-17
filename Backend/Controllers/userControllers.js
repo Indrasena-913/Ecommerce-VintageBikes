@@ -98,7 +98,7 @@ export const loginUser = async (req, res) => {
 };
 
 export const verifyEmail = async (req, res) => {
-	const { token } = req.query;
+	const { token } = req.params;
 
 	if (!token) {
 		return res.status(400).json({ message: "Token is required" });
