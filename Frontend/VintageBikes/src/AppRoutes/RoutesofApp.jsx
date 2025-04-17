@@ -10,6 +10,7 @@ import MyOrders from "../pages/MyOrders";
 import ForgotPasswordForm from "../ForgotPassword/FPForm";
 import ResetPasswordForm from "../ForgotPassword/ResetPForm";
 import ProtectedRoute from "../pages/ProtectedRoute";
+import VerifyEmail from "../ForgotPassword/VerifyEmail";
 
 const RoutesComponent = ({ count, setCount }) => {
 	return (
