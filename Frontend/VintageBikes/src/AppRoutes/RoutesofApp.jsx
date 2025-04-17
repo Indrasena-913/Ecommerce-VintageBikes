@@ -20,7 +20,7 @@ const RoutesComponent = ({ count, setCount }) => {
 			<Route path="/register" element={<Register />} />
 			<Route path="/forgot-password" element={<ForgotPasswordForm />} />
 			<Route path="/reset-password/:token" element={<ResetPasswordForm />} />
-			<Route path="/verify-email" element={<VerifyEmail />} />
+			<Route path="/verify-email/:token" element={<VerifyEmail />} />
 
 			{/* 🔐 Protected Routes */}
 			<Route

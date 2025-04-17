@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { BASE_API_URL } from "../api";
 
 const VerifyEmail = () => {
-	const [searchParams] = useSearchParams();
+	const { token } = useParams();
 	const navigate = useNavigate();
 	const [status, setStatus] = useState("loading");
-
-	const token = searchParams.get("token");
 
 	useEffect(() => {
 		const verifyEmail = async () => {
