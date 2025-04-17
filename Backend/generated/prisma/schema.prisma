@@ -94,7 +94,7 @@ model CartItem {
 model Order {
   id          Int         @id @default(autoincrement())
   totalAmount Float
-  status      OrderStatus
+  status      OrderStatus // Use the enum for the status field
   createdAt   DateTime    @default(now())
 
   userId Int
