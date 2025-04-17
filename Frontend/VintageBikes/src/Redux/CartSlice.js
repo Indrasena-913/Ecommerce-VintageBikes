@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const BASE_API_URL = "http://localhost:3000";
+const BASE_API_URL = "https://backend-vintagebikes.onrender.com";
 
 const initialState = {
 	items: JSON.parse(localStorage.getItem("cartItems")) || [],

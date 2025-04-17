@@ -232,7 +232,7 @@ const CartManager = () => {
 	return (
 		<div className="max-w-5xl mx-auto bg-white shadow-lg rounded-xl overflow-hidden mt-12 border border-gray-100">
 			<div className="bg-black text-white py-5 px-6">
-				<h2 className="text-2xl font-medium tracking-tight flex items-center">
+				<h2 className="text-l font-medium tracking-tight flex items-center">
 					<ShoppingBag className="mr-3 text-white" />
 					Shopping Cart
 					<span className="ml-2 text-sm bg-white text-black px-2 py-0.5 rounded-full">

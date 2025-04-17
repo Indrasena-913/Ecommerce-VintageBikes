@@ -1,5 +1,4 @@
 import React, { useEffect, useState, Suspense } from "react";
-import axios from "axios";
 import { format } from "date-fns";
 import {
 	PackageCheck,
@@ -12,10 +11,9 @@ import {
 	AlertCircle,
 	Truck,
 } from "lucide-react";
-import { BASE_API_URL } from "../api";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { setOrders } from "../Redux/MyOrderSlice";
+import { fetchMyOrders } from "../Redux/MyOrderSlice";
 
 const LazyImage = ({ src, alt, onClick, className }) => {
 	const [loaded, setLoaded] = useState(false);
@@ -138,6 +136,7 @@ const StatusBadge = ({ status }) => {
 					label: "Processing",
 					color: "bg-yellow-50 text-yellow-700 border-yellow-200",
 				};
+
 			case "cancelled":
 				return {
 					icon: <AlertCircle size={14} />,
@@ -165,52 +164,107 @@ const StatusBadge = ({ status }) => {
 	);
 };
 
+const formatCurrency = (amount) => {
+	if (amount === undefined || amount === null) return "$0.00";
+	return `$${Number(amount).toLocaleString("en-US", {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
+	})}`;
+};
+
+const formatDate = (dateString) => {
+	if (!dateString) return format(new Date(), "dd MMMM yyyy");
+
+	try {
+		return format(new Date(dateString), "dd MMMM yyyy");
+	} catch (error) {
+		console.error("Date formatting error:", error);
+		return format(new Date(), "dd MMMM yyyy");
+	}
+};
+
 function MyOrders() {
 	const [loading, setLoading] = useState(true);
 	const [user, setUser] = useState(null);
 	const [expandedOrders, setExpandedOrders] = useState({});
 	const navigate = useNavigate();
-	const orders = useSelector((state) => state.myOrders.orders);
 	const dispatch = useDispatch();
+	const orders = useSelector((state) => state.myOrders.orders || []);
+	const [lastOrderCheck, setLastOrderCheck] = useState(Date.now());
 
 	useEffect(() => {
 		const storedUser = localStorage.getItem("user");
 		if (storedUser) {
 			setUser(JSON.parse(storedUser));
+		} else {
+			setLoading(false);
 		}
 	}, []);
 
 	useEffect(() => {
-		const fetchOrders = async () => {
-			const token = localStorage.getItem("accessToken");
+		const checkForNewOrders = async () => {
+			if (!user?.userId) return;
+
 			try {
-				const res = await axios.get(`${BASE_API_URL}/myorders/${user.userId}`, {
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const fetchedOrders = Array.isArray(res.data) ? res.data : [];
+				await dispatch(fetchMyOrders(user.userId)).unwrap();
+			} catch (error) {
+				console.error("Failed to check for new orders:", error);
+			}
+		};
 
-				const initialExpanded = {};
-				fetchedOrders.forEach((order, index) => {
-					initialExpanded[order.id] = index < 1;
-				});
-				setExpandedOrders(initialExpanded);
+		checkForNewOrders();
 
-				dispatch(setOrders(fetchedOrders));
+		const intervalId = setInterval(() => {
+			setLastOrderCheck(Date.now());
+		}, 30000);
+
+		return () => clearInterval(intervalId);
+	}, [user, lastOrderCheck, dispatch]);
+
+	useEffect(() => {
+		const loadOrders = async () => {
+			if (!user?.userId) {
+				setLoading(false);
+				return;
+			}
+
+			try {
+				setLoading(true);
+
+				await dispatch(fetchMyOrders(user.userId)).unwrap();
+
+				if (orders && orders.length > 0) {
+					const initialExpanded = {};
+					orders.forEach((order, index) => {
+						initialExpanded[order.id] = index === 0;
+					});
+					setExpandedOrders(initialExpanded);
+				}
 			} catch (error) {
 				console.error("Failed to fetch orders:", error);
-				dispatch(setOrders([]));
 			} finally {
 				setLoading(false);
 			}
 		};
 
-		if (user?.userId) {
-			fetchOrders();
-		} else {
-			dispatch(setOrders([]));
-			setLoading(false);
-		}
+		loadOrders();
 	}, [user, dispatch]);
+
+	useEffect(() => {
+		if (orders && orders.length > 0) {
+			setExpandedOrders((prev) => {
+				const newExpanded = { ...prev };
+
+				orders.forEach((order) => {
+					if (newExpanded[order.id] === undefined) {
+						newExpanded[order.id] = true;
+					}
+				});
+
+				return newExpanded;
+			});
+		}
+	}, [orders]);
 
 	const toggleOrderExpand = (orderId) => {
 		setExpandedOrders((prev) => ({
@@ -228,7 +282,7 @@ function MyOrders() {
 		);
 	}
 
-	if (orders.length === 0) {
+	if (!loading && (!orders || orders.length === 0)) {
 		return (
 			<div className="max-w-5xl mx-auto px-4 py-8 mt-12">
 				<h2 className="text-3xl font-bold mb-8 text-gray-900">My Orders</h2>
@@ -242,184 +296,198 @@ function MyOrders() {
 			<h2 className="text-3xl font-bold mb-8 text-gray-900">My Orders</h2>
 
 			<div className="space-y-6">
-				{orders.map((order) => (
-					<div
-						key={order.id}
-						className="rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-white transition-all duration-300 hover:border-gray-300"
-					>
-						{/* Order Header - Always visible */}
+				{orders.map((order) => {
+					const orderProducts = order?.products || [];
+					const orderPayment = order?.payment;
+					const orderStatus = order?.status || "pending";
+					const orderCreatedAt = order?.createdAt;
+					const orderId = order?.id || "unknown";
+
+					return (
 						<div
-							className="p-4 sm:p-5 cursor-pointer bg-gray-50 border-b border-gray-200"
-							onClick={() => toggleOrderExpand(order.id)}
+							key={orderId}
+							className="rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-white transition-all duration-300 hover:border-gray-300"
 						>
-							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 sm:mb-0">
-								<div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-									<StatusBadge status={order.status} />
+							{/* Order Header - Always visible */}
+							<div
+								className="p-4 sm:p-5 cursor-pointer bg-gray-50 border-b border-gray-200"
+								onClick={() => toggleOrderExpand(orderId)}
+							>
+								<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 sm:mb-0">
+									<div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+										<StatusBadge status={orderStatus} />
 
-									<div>
-										<p className="text-sm text-gray-500 mt-2 sm:mt-0">
-											Order #{order.id}
-										</p>
-										<p className="text-sm text-gray-500">
-											{format(new Date(order.createdAt), "dd MMMM yyyy")}
-										</p>
-									</div>
-								</div>
-
-								<div className="flex items-center justify-between w-full sm:w-auto gap-2 sm:gap-6 mt-3 sm:mt-0">
-									<div className="text-right">
-										<p className="text-xs text-gray-500">Total Amount</p>
-										<p className="text-base sm:text-lg font-bold text-gray-900">
-											$
-											{order.totalAmount.toLocaleString("en-US", {
-												minimumFractionDigits: 2,
-											})}
-										</p>
-									</div>
-
-									<button
-										className="text-gray-500 hover:text-gray-700 p-2"
-										aria-label={
-											expandedOrders[order.id]
-												? "Collapse order details"
-												: "Expand order details"
-										}
-									>
-										{expandedOrders[order.id] ? (
-											<ChevronUp size={20} />
-										) : (
-											<ChevronDown size={20} />
-										)}
-									</button>
-								</div>
-							</div>
-						</div>
-
-						{/* Order Details - Expandable */}
-						{expandedOrders[order.id] && (
-							<div className="p-4 sm:p-5">
-								{/* Order Timeline */}
-								<div className="mb-6 pb-6 border-b border-gray-100">
-									<h4 className="text-sm font-medium text-gray-700 mb-3">
-										Order Timeline
-									</h4>
-									<div className="flex items-center text-sm">
-										<div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center mr-3">
-											<CheckCircle size={16} />
-										</div>
 										<div>
-											<p className="font-medium">Order Placed</p>
-											<p className="text-gray-500">
-												{format(
-													new Date(order.createdAt),
-													"dd MMM yyyy, hh:mm a"
-												)}
+											<p className="text-sm text-gray-500 mt-2 sm:mt-0">
+												Order #{orderId}
+											</p>
+											<p className="text-sm text-gray-500">
+												{formatDate(orderCreatedAt)}
 											</p>
 										</div>
 									</div>
-								</div>
 
-								{/* Products List */}
-								<h4 className="text-sm font-medium text-gray-700 mb-3">
-									Products ({order.products.length})
-								</h4>
-								<div className="space-y-4 mb-6">
-									{order.products.map((product) => (
-										<div
-											key={product.productId}
-											className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:border-gray-300 transition-all duration-200 cursor-pointer"
-											onClick={() => navigate(`/products/${product.productId}`)}
+									<div className="flex items-center justify-between w-full sm:w-auto gap-2 sm:gap-6 mt-3 sm:mt-0">
+										<div className="text-right">
+											<p className="text-xs text-gray-500">Total Amount</p>
+											<p className="text-base sm:text-lg font-bold text-gray-900">
+												{formatCurrency(order?.totalAmount)}
+											</p>
+										</div>
+
+										<button
+											className="text-gray-500 hover:text-gray-700 p-2"
+											aria-label={
+												expandedOrders[orderId]
+													? "Collapse order details"
+													: "Expand order details"
+											}
 										>
-											<Suspense
-												fallback={
-													<div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg"></div>
-												}
-											>
-												<LazyImage
-													src={product.image[0]}
-													alt={product.name}
-													className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg flex-shrink-0"
-												/>
-											</Suspense>
-
-											<div className="flex-1 min-w-0">
-												<p className="font-medium text-gray-900 truncate text-sm sm:text-base">
-													{product.name}
-												</p>
-												<div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0 mt-1">
-													<p className="text-xs sm:text-sm text-gray-500">
-														Qty:{" "}
-														<span className="font-medium text-gray-700">
-															{product.quantity}
-														</span>
-													</p>
-													<span className="hidden sm:inline mx-2 text-gray-300">
-														•
-													</span>
-													<p className="text-xs sm:text-sm text-gray-500">
-														Price:{" "}
-														<span className="font-medium text-gray-700">
-															$
-															{product.price.toLocaleString("en-US", {
-																minimumFractionDigits: 2,
-															})}
-														</span>
-													</p>
-												</div>
-											</div>
-
-											<div className="text-right flex-shrink-0">
-												<p className="font-bold text-gray-900 text-sm sm:text-base">
-													$
-													{(product.quantity * product.price).toLocaleString(
-														"en-US",
-														{ minimumFractionDigits: 2 }
-													)}
-												</p>
-											</div>
-										</div>
-									))}
+											{expandedOrders[orderId] ? (
+												<ChevronUp size={20} />
+											) : (
+												<ChevronDown size={20} />
+											)}
+										</button>
+									</div>
 								</div>
+							</div>
 
-								{/* Payment Information */}
-								{order.payment && (
-									<div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+							{/* Order Details - Expandable */}
+							{expandedOrders[orderId] && (
+								<div className="p-4 sm:p-5">
+									{/* Order Timeline */}
+									<div className="mb-6 pb-6 border-b border-gray-100">
 										<h4 className="text-sm font-medium text-gray-700 mb-3">
-											Payment Information
+											Order Timeline
 										</h4>
-										<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-											<div className="flex items-center gap-2">
-												<div className="p-2 bg-white rounded-full">
-													<CreditCard className="h-4 w-4 text-gray-700" />
-												</div>
-												<div>
-													<p className="text-sm font-medium text-gray-900">
-														{order.payment.status === "created"
-															? "Payment Complete"
-															: "Payment Pending"}
-													</p>
-													<p className="text-xs text-gray-500">
-														{format(
-															new Date(order.payment.createdAt),
-															"dd MMM yyyy, hh:mm a"
-														)}
-													</p>
-												</div>
+										<div className="flex items-center text-sm">
+											<div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center mr-3">
+												<CheckCircle size={16} />
 											</div>
-
-											<p className="text-sm font-bold text-gray-900 mt-2 sm:mt-0">
-												$
-												{order.totalAmount.toLocaleString("en-US", {
-													minimumFractionDigits: 2,
-												})}
-											</p>
+											<div>
+												<p className="font-medium">Order Placed</p>
+												<p className="text-gray-500">
+													{orderCreatedAt
+														? format(
+																new Date(orderCreatedAt),
+																"dd MMM yyyy, hh:mm a"
+														  )
+														: "Date not available"}
+												</p>
+											</div>
 										</div>
 									</div>
-								)}
-							</div>
-						)}
-					</div>
-				))}
+
+									{/* Products List */}
+									<h4 className="text-sm font-medium text-gray-700 mb-3">
+										Products ({orderProducts.length})
+									</h4>
+									<div className="space-y-4 mb-6">
+										{orderProducts.map((product) => {
+											const productId = product?.productId || "unknown";
+											const productName =
+												product?.name || "Product Name Unavailable";
+											const productImage =
+												product?.image &&
+												Array.isArray(product.image) &&
+												product.image.length > 0
+													? product.image[0]
+													: null;
+											const productQuantity = product?.quantity || 0;
+											const productPrice = product?.price || 0;
+											const productTotal = productQuantity * productPrice;
+
+											return (
+												<div
+													key={productId}
+													className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:border-gray-300 transition-all duration-200 cursor-pointer"
+													onClick={() => navigate(`/products/${productId}`)}
+												>
+													<Suspense
+														fallback={
+															<div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg"></div>
+														}
+													>
+														<LazyImage
+															src={productImage || ""}
+															alt={productName}
+															className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg flex-shrink-0"
+														/>
+													</Suspense>
+
+													<div className="flex-1 min-w-0">
+														<p className="font-medium text-gray-900 truncate text-sm sm:text-base">
+															{productName}
+														</p>
+														<div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0 mt-1">
+															<p className="text-xs sm:text-sm text-gray-500">
+																Qty:{" "}
+																<span className="font-medium text-gray-700">
+																	{productQuantity}
+																</span>
+															</p>
+															<span className="hidden sm:inline mx-2 text-gray-300">
+																•
+															</span>
+															<p className="text-xs sm:text-sm text-gray-500">
+																Price:{" "}
+																<span className="font-medium text-gray-700">
+																	{formatCurrency(productPrice)}
+																</span>
+															</p>
+														</div>
+													</div>
+
+													<div className="text-right flex-shrink-0">
+														<p className="font-bold text-gray-900 text-sm sm:text-base">
+															{formatCurrency(productTotal)}
+														</p>
+													</div>
+												</div>
+											);
+										})}
+									</div>
+
+									{/* Payment Information */}
+									{orderPayment && (
+										<div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+											<h4 className="text-sm font-medium text-gray-700 mb-3">
+												Payment Information
+											</h4>
+											<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+												<div className="flex items-center gap-2">
+													<div className="p-2 bg-white rounded-full">
+														<CreditCard className="h-4 w-4 text-gray-700" />
+													</div>
+													<div>
+														<p className="text-sm font-medium text-gray-900">
+															{orderPayment.status === "created"
+																? "Payment Complete"
+																: "Payment Pending"}
+														</p>
+														<p className="text-xs text-gray-500">
+															{orderPayment.createdAt
+																? format(
+																		new Date(orderPayment.createdAt),
+																		"dd MMM yyyy, hh:mm a"
+																  )
+																: "Date not available"}
+														</p>
+													</div>
+												</div>
+
+												<p className="text-sm font-bold text-gray-900 mt-2 sm:mt-0">
+													{formatCurrency(order?.totalAmount)}
+												</p>
+											</div>
+										</div>
+									)}
+								</div>
+							)}
+						</div>
+					);
+				})}
 			</div>
 		</div>
 	);

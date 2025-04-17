@@ -18,7 +18,6 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "../Redux/CartSlice.js";
 import toast from "react-hot-toast";
 
-// Skeleton components
 const ProductSkeleton = () => (
 	<div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full animate-pulse">
 		<div className="h-48 bg-gray-200"></div>

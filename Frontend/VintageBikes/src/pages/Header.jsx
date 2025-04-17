@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useSelector } from "react-redux";
-import { BASE_API_URL } from "../api";
-import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
 import {
 	Heart,
 	ShoppingCart,
@@ -14,56 +12,50 @@ import {
 	ChevronDown,
 } from "lucide-react";
 import logo from "../assets/vbike2.png";
-import { useDispatch } from "react-redux";
 import { fetchCartItems } from "../Redux/CartSlice";
 import { fetchMyOrders } from "../Redux/MyOrderSlice";
+import { fetchWishlistItems } from "../Redux/WishListSlice";
 
 const Header = ({ count }) => {
 	const [showProfile, setShowProfile] = useState(false);
-	const [wishlistCount, setWishlistCount] = useState(0);
 
 	const { setIsLoggedIn } = useAuth();
 	const navigate = useNavigate();
+	const dispatch = useDispatch();
 
 	const cartItems = useSelector((state) => state.cart.items);
 	const cartCount = cartItems.length;
+
 	const myOrders = useSelector((state) => state.myOrders.orders);
 	const orderCount = myOrders.length;
 
+	const wishlistItems = useSelector((state) => state.wishlist.items);
+	const wishlistCount = wishlistItems.length;
+
 	const res = localStorage.getItem("user");
-	const user = JSON.parse(res);
-	const dispatch = useDispatch();
+	const user = res ? JSON.parse(res) : null;
 
 	useEffect(() => {
 		if (user?.userId) {
 			dispatch(fetchCartItems(user.userId));
 			dispatch(fetchMyOrders(user.userId));
+			dispatch(fetchWishlistItems(user.userId));
 		}
 	}, [dispatch, user?.userId]);
 
 	useEffect(() => {
-		const fetchWishlistCount = async () => {
-			try {
-				const token = localStorage.getItem("accessToken");
-				const res = await axios.get(`${BASE_API_URL}/wishlist/${user.userId}`, {
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				});
-				setWishlistCount(res.data.length);
-			} catch (error) {
-				console.error("Error fetching wishlist count:", error);
-			}
-		};
-
-		fetchWishlistCount();
-	}, [count, user.userId]);
+		if (user?.userId && count !== undefined) {
+			dispatch(fetchWishlistItems(user.userId));
+		}
+	}, [count, dispatch, user?.userId]);
 
 	const handleLogout = () => {
 		localStorage.removeItem("accessToken");
 		localStorage.removeItem("user");
 		localStorage.removeItem("cartItems");
 		localStorage.removeItem("myOrders");
+		localStorage.removeItem("wishlistItems");
+		localStorage.removeItem("wishlistLastFetched");
 		setIsLoggedIn(false);
 		navigate("/");
 	};
@@ -147,7 +139,7 @@ const Header = ({ count }) => {
 							className="text-black hover:text-gray-700 text-sm font-medium flex items-center gap-1.5 transition-colors duration-200 focus:outline-none"
 						>
 							<User size={15} strokeWidth={2} />
-							{user.userName.split(" ")[0]}
+							{user?.userName?.split(" ")[0]}
 							<ChevronDown
 								size={14}
 								strokeWidth={2}
@@ -160,9 +152,9 @@ const Header = ({ count }) => {
 						{showProfile && (
 							<div className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg p-4 z-50 border border-gray-100">
 								<div className="flex flex-col">
-									<p className="font-medium text-black">{user.userName}</p>
+									<p className="font-medium text-black">{user?.userName}</p>
 									<p className="text-xs text-gray-600 mb-3 truncate">
-										{user.userEmail}
+										{user?.userEmail}
 									</p>
 									<div className="h-px bg-gray-100 my-2" />
 									<button
@@ -221,9 +213,9 @@ const Header = ({ count }) => {
 
 				{showProfile && (
 					<div className="absolute top-16 right-4 w-60 bg-white rounded-lg shadow-lg p-3 z-50 border border-gray-100">
-						<p className="font-medium text-black">{user.userName}</p>
+						<p className="font-medium text-black">{user?.userName}</p>
 						<p className="text-xs text-gray-600 mb-2 truncate">
-							{user.userEmail}
+							{user?.userEmail}
 						</p>
 						<div className="h-px bg-gray-100 my-2" />
 						<a

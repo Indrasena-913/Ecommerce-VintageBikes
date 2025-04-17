@@ -6,10 +6,9 @@ import Header from "./pages/Header";
 import { Toaster } from "react-hot-toast";
 import { Provider } from "react-redux";
 import store from "./Redux/Store";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
-import { useNavigate } from "react-router-dom";
 
 const stripePromise = loadStripe(
 	"pk_test_51REBHrRc7PjhLyfA41VMWedZFq5UszuKjYd3LSfV4igf8uV4guJb55etpFzRxd7qKibjziOUqtvvRcnk9d997cPZ00cuSvdkY6"

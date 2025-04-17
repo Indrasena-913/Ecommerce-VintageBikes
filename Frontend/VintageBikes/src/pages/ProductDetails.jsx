@@ -108,7 +108,6 @@ const ProductDetails = ({ count, setCount }) => {
 				console.error("Failed to fetch product:", err);
 				toast.error("Failed to load product details");
 			} finally {
-				// Add slight delay to prevent flickering with fast connections
 				setTimeout(() => setIsLoading(false), 300);
 			}
 		};
@@ -247,7 +246,6 @@ const ProductDetails = ({ count, setCount }) => {
 			</div>
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-				{/* Image Gallery - MAINTAINING ORIGINAL LAYOUT */}
 				<div className="flex flex-col gap-4">
 					<img
 						src={mainImage}
